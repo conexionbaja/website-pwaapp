@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { t } = useLanguage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,15 +28,15 @@ const Login = () => {
         <div className="max-w-md mx-auto">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-2xl text-foreground">Iniciar Sesión</CardTitle>
+              <CardTitle className="text-2xl text-foreground">{t.login.title}</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Accede a tu portal de cliente
+                {t.login.title}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-foreground">Correo Electrónico</Label>
+                  <Label htmlFor="email" className="text-foreground">{t.login.email}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -46,7 +48,7 @@ const Login = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-foreground">Contraseña</Label>
+                  <Label htmlFor="password" className="text-foreground">{t.login.password}</Label>
                   <Input
                     id="password"
                     type="password"
@@ -58,18 +60,15 @@ const Login = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full" variant="hero">
-                  Iniciar Sesión
+                  {t.login.button}
                 </Button>
               </form>
               
               <div className="mt-6 text-center space-y-2">
-                <a href="#" className="text-sm text-primary hover:underline block">
-                  ¿Olvidaste tu contraseña?
-                </a>
                 <p className="text-sm text-muted-foreground">
-                  ¿No tienes cuenta?{" "}
+                  {t.login.noAccount}{" "}
                   <NavLink to="/registro" className="text-primary hover:underline">
-                    Regístrate aquí
+                    {t.login.register}
                   </NavLink>
                 </p>
               </div>

@@ -1,0 +1,123 @@
+export const es = {
+  header: {
+    home: 'Inicio',
+    send: 'Enviar Paquete',
+    track: 'Rastrear',
+    login: 'Iniciar Sesión',
+    register: 'Registrarse',
+  },
+  home: {
+    hero: {
+      title: 'Envíos Rápidos y Seguros en Tijuana',
+      subtitle: 'Tu servicio de paquetería confiable para envíos locales y más allá',
+      cta: 'Enviar Ahora',
+    },
+    howItWorks: {
+      title: '¿Cómo Funciona?',
+      step1: {
+        title: 'Regístrate',
+        description: 'Crea tu cuenta en minutos',
+      },
+      step2: {
+        title: 'Envía',
+        description: 'Proporciona los detalles de tu paquete',
+      },
+      step3: {
+        title: 'Rastrea',
+        description: 'Sigue tu envío en tiempo real',
+      },
+    },
+    whyChoose: {
+      title: '¿Por Qué Elegirnos?',
+      speed: {
+        title: 'Entrega Rápida',
+        description: 'Entregamos tus paquetes en tiempo récord',
+      },
+      secure: {
+        title: 'Envíos Seguros',
+        description: 'Tu paquete está protegido en todo momento',
+      },
+      affordable: {
+        title: 'Precios Accesibles',
+        description: 'Las mejores tarifas del mercado',
+      },
+    },
+    cta: {
+      title: '¿Listo para Enviar?',
+      subtitle: 'Únete a miles de clientes satisfechos',
+      button: 'Comenzar Ahora',
+    },
+  },
+  login: {
+    title: 'Iniciar Sesión',
+    email: 'Correo Electrónico',
+    password: 'Contraseña',
+    button: 'Entrar',
+    noAccount: '¿No tienes cuenta?',
+    register: 'Regístrate aquí',
+  },
+  register: {
+    title: 'Crear Cuenta',
+    name: 'Nombre Completo',
+    email: 'Correo Electrónico',
+    phone: 'Teléfono',
+    password: 'Contraseña',
+    confirmPassword: 'Confirmar Contraseña',
+    button: 'Registrarse',
+    hasAccount: '¿Ya tienes cuenta?',
+    login: 'Inicia sesión aquí',
+  },
+  send: {
+    title: 'Enviar Paquete',
+    packageType: 'Tipo de Paquete',
+    selectType: 'Seleccionar tipo',
+    types: {
+      document: 'Documento',
+      package: 'Paquete',
+      grocery: 'Alimentos',
+      household: 'Artículos del Hogar',
+    },
+    weight: 'Peso (kg)',
+    dimensions: 'Dimensiones',
+    length: 'Largo (cm)',
+    width: 'Ancho (cm)',
+    height: 'Alto (cm)',
+    addresses: 'Direcciones',
+    origin: 'Dirección de Origen',
+    destination: 'Dirección de Destino',
+    pickup: 'Recoger en mi domicilio',
+    button: 'Procesar Envío',
+  },
+  track: {
+    title: 'Rastrear Envío',
+    trackingNumber: 'Número de Rastreo',
+    placeholder: 'Ingresa tu número de rastreo',
+    button: 'Buscar',
+    status: {
+      pending: 'Pendiente',
+      pickup: 'En Recolección',
+      transit: 'En Tránsito',
+      delivered: 'Entregado',
+    },
+  },
+  footer: {
+    about: {
+      title: 'Acerca de Nosotros',
+      description: 'Conexión Baja es tu servicio de paquetería confiable en Tijuana, ofreciendo soluciones de entrega rápidas y seguras.',
+    },
+    quickLinks: {
+      title: 'Enlaces Rápidos',
+      home: 'Inicio',
+      send: 'Enviar',
+      track: 'Rastrear',
+      login: 'Iniciar Sesión',
+    },
+    newsletter: {
+      title: 'Boletín',
+      description: 'Suscríbete para recibir actualizaciones y ofertas especiales',
+      placeholder: 'Tu correo electrónico',
+      button: 'Suscribirse',
+    },
+    rights: 'Todos los derechos reservados.',
+  },
+};

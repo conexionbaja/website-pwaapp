@@ -1,0 +1,123 @@
+export const en = {
+  header: {
+    home: 'Home',
+    send: 'Send Package',
+    track: 'Track',
+    login: 'Login',
+    register: 'Sign Up',
+  },
+  home: {
+    hero: {
+      title: 'Fast and Secure Shipping in Tijuana',
+      subtitle: 'Your reliable parcel service for local deliveries and beyond',
+      cta: 'Send Now',
+    },
+    howItWorks: {
+      title: 'How It Works?',
+      step1: {
+        title: 'Sign Up',
+        description: 'Create your account in minutes',
+      },
+      step2: {
+        title: 'Send',
+        description: 'Provide your package details',
+      },
+      step3: {
+        title: 'Track',
+        description: 'Follow your shipment in real-time',
+      },
+    },
+    whyChoose: {
+      title: 'Why Choose Us?',
+      speed: {
+        title: 'Fast Delivery',
+        description: 'We deliver your packages in record time',
+      },
+      secure: {
+        title: 'Secure Shipping',
+        description: 'Your package is protected at all times',
+      },
+      affordable: {
+        title: 'Affordable Prices',
+        description: 'The best rates on the market',
+      },
+    },
+    cta: {
+      title: 'Ready to Send?',
+      subtitle: 'Join thousands of satisfied customers',
+      button: 'Get Started',
+    },
+  },
+  login: {
+    title: 'Login',
+    email: 'Email Address',
+    password: 'Password',
+    button: 'Sign In',
+    noAccount: "Don't have an account?",
+    register: 'Register here',
+  },
+  register: {
+    title: 'Create Account',
+    name: 'Full Name',
+    email: 'Email Address',
+    phone: 'Phone',
+    password: 'Password',
+    confirmPassword: 'Confirm Password',
+    button: 'Sign Up',
+    hasAccount: 'Already have an account?',
+    login: 'Login here',
+  },
+  send: {
+    title: 'Send Package',
+    packageType: 'Package Type',
+    selectType: 'Select type',
+    types: {
+      document: 'Document',
+      package: 'Package',
+      grocery: 'Groceries',
+      household: 'Household Items',
+    },
+    weight: 'Weight (kg)',
+    dimensions: 'Dimensions',
+    length: 'Length (cm)',
+    width: 'Width (cm)',
+    height: 'Height (cm)',
+    addresses: 'Addresses',
+    origin: 'Origin Address',
+    destination: 'Destination Address',
+    pickup: 'Pick up at my address',
+    button: 'Process Shipment',
+  },
+  track: {
+    title: 'Track Shipment',
+    trackingNumber: 'Tracking Number',
+    placeholder: 'Enter your tracking number',
+    button: 'Search',
+    status: {
+      pending: 'Pending',
+      pickup: 'Pickup Scheduled',
+      transit: 'In Transit',
+      delivered: 'Delivered',
+    },
+  },
+  footer: {
+    about: {
+      title: 'About Us',
+      description: 'Conexión Baja is your reliable parcel service in Tijuana, offering fast and secure delivery solutions.',
+    },
+    quickLinks: {
+      title: 'Quick Links',
+      home: 'Home',
+      send: 'Send',
+      track: 'Track',
+      login: 'Login',
+    },
+    newsletter: {
+      title: 'Newsletter',
+      description: 'Subscribe to receive updates and special offers',
+      placeholder: 'Your email address',
+      button: 'Subscribe',
+    },
+    rights: 'All rights reserved.',
+  },
+};

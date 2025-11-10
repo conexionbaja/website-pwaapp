@@ -1,11 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
-import { Package, Menu, X } from "lucide-react";
+import { Menu, X, Globe } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/badge.jpg";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'es' ? 'en' : 'es');
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -23,30 +29,39 @@ const Header = () => {
               className="text-muted-foreground hover:text-foreground transition-colors"
               activeClassName="text-primary"
             >
-              Inicio
+              {t.header.home}
             </NavLink>
             <NavLink
               to="/enviar"
               className="text-muted-foreground hover:text-foreground transition-colors"
               activeClassName="text-primary"
             >
-              Enviar Paquete
+              {t.header.send}
             </NavLink>
             <NavLink
               to="/rastreo"
               className="text-muted-foreground hover:text-foreground transition-colors"
               activeClassName="text-primary"
             >
-              Rastrear
+              {t.header.track}
             </NavLink>
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLanguage}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Globe className="h-5 w-5" />
+              <span className="ml-1 text-xs font-semibold">{language.toUpperCase()}</span>
+            </Button>
             <Button variant="ghost" asChild>
-              <NavLink to="/login">Iniciar Sesión</NavLink>
+              <NavLink to="/login">{t.header.login}</NavLink>
             </Button>
             <Button variant="hero" asChild>
-              <NavLink to="/registro">Registrarse</NavLink>
+              <NavLink to="/registro">{t.header.register}</NavLink>
             </Button>
           </div>
 
@@ -68,7 +83,7 @@ const Header = () => {
               activeClassName="text-primary"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Inicio
+              {t.header.home}
             </NavLink>
             <NavLink
               to="/enviar"
@@ -76,7 +91,7 @@ const Header = () => {
               activeClassName="text-primary"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Enviar Paquete
+              {t.header.send}
             </NavLink>
             <NavLink
               to="/rastreo"
@@ -84,14 +99,22 @@ const Header = () => {
               activeClassName="text-primary"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Rastrear
+              {t.header.track}
             </NavLink>
             <div className="flex flex-col gap-2 pt-4">
+              <Button
+                variant="ghost"
+                onClick={toggleLanguage}
+                className="w-full justify-center"
+              >
+                <Globe className="h-5 w-5 mr-2" />
+                {language === 'es' ? 'English' : 'Español'}
+              </Button>
               <Button variant="ghost" asChild className="w-full">
-                <NavLink to="/login">Iniciar Sesión</NavLink>
+                <NavLink to="/login">{t.header.login}</NavLink>
               </Button>
               <Button variant="hero" asChild className="w-full">
-                <NavLink to="/registro">Registrarse</NavLink>
+                <NavLink to="/registro">{t.header.register}</NavLink>
               </Button>
             </div>
           </div>

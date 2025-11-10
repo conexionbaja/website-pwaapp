@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MapPin, Package, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Rastreo = () => {
+  const { t } = useLanguage();
   const [trackingNumber, setTrackingNumber] = useState("");
   const [showResults, setShowResults] = useState(false);
 
@@ -28,19 +30,19 @@ const Rastreo = () => {
         <div className="max-w-2xl mx-auto">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-2xl text-foreground">Rastrear Envío</CardTitle>
+              <CardTitle className="text-2xl text-foreground">{t.track.title}</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Ingresa tu número de guía para ver el estado de tu paquete
+                {t.track.title}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="tracking" className="text-foreground">Número de Guía</Label>
+                  <Label htmlFor="tracking" className="text-foreground">{t.track.trackingNumber}</Label>
                   <Input
                     id="tracking"
                     type="text"
-                    placeholder="CB123456789MX"
+                    placeholder={t.track.placeholder}
                     value={trackingNumber}
                     onChange={(e) => setTrackingNumber(e.target.value)}
                     required
@@ -48,15 +50,15 @@ const Rastreo = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full" variant="hero">
-                  Rastrear Paquete
+                  {t.track.button}
                 </Button>
               </form>
 
               {showResults && (
                 <div className="mt-8 space-y-6">
                   <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground mb-1">Estado actual:</p>
-                    <p className="text-lg font-semibold text-primary">En tránsito a destino</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t.track.status.transit}:</p>
+                    <p className="text-lg font-semibold text-primary">{t.track.status.transit}</p>
                   </div>
 
                   <div className="space-y-4">
@@ -68,7 +70,7 @@ const Rastreo = () => {
                         <div className="w-0.5 h-full bg-primary/30 mt-2"></div>
                       </div>
                       <div className="pb-6">
-                        <p className="font-semibold text-foreground">Paquete recogido</p>
+                        <p className="font-semibold text-foreground">{t.track.status.pickup}</p>
                         <p className="text-sm text-muted-foreground">Tijuana, BC - 10:30 AM</p>
                       </div>
                     </div>
@@ -81,7 +83,7 @@ const Rastreo = () => {
                         <div className="w-0.5 h-full bg-primary/30 mt-2"></div>
                       </div>
                       <div className="pb-6">
-                        <p className="font-semibold text-foreground">En centro de distribución</p>
+                        <p className="font-semibold text-foreground">{t.track.status.transit}</p>
                         <p className="text-sm text-muted-foreground">Ensenada, BC - 2:15 PM</p>
                       </div>
                     </div>
@@ -93,8 +95,8 @@ const Rastreo = () => {
                         </div>
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground">En tránsito</p>
-                        <p className="text-sm text-muted-foreground">Rumbo a Los Cabos, BCS</p>
+                        <p className="font-semibold text-foreground">{t.track.status.transit}</p>
+                        <p className="text-sm text-muted-foreground">Los Cabos, BCS</p>
                       </div>
                     </div>
                   </div>

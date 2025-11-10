@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Enviar = () => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     tipoEnvio: "",
     peso: "",
@@ -33,34 +35,34 @@ const Enviar = () => {
         <div className="max-w-2xl mx-auto">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-2xl text-foreground">Enviar Paquete</CardTitle>
+              <CardTitle className="text-2xl text-foreground">{t.send.title}</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Completa los detalles de tu envío
+                {t.send.title}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="tipoEnvio" className="text-foreground">Tipo de Envío</Label>
+                  <Label htmlFor="tipoEnvio" className="text-foreground">{t.send.packageType}</Label>
                   <Select 
                     value={formData.tipoEnvio} 
                     onValueChange={(value) => setFormData({...formData, tipoEnvio: value})}
                   >
                     <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Selecciona el tipo" />
+                      <SelectValue placeholder={t.send.selectType} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="paquete">Paquete</SelectItem>
-                      <SelectItem value="sobre">Sobre</SelectItem>
-                      <SelectItem value="caja">Caja Grande</SelectItem>
-                      <SelectItem value="pallet">Pallet</SelectItem>
+                      <SelectItem value="document">{t.send.types.document}</SelectItem>
+                      <SelectItem value="package">{t.send.types.package}</SelectItem>
+                      <SelectItem value="grocery">{t.send.types.grocery}</SelectItem>
+                      <SelectItem value="household">{t.send.types.household}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="peso" className="text-foreground">Peso (kg)</Label>
+                    <Label htmlFor="peso" className="text-foreground">{t.send.weight}</Label>
                     <Input
                       id="peso"
                       type="number"
@@ -73,7 +75,7 @@ const Enviar = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="dimensiones" className="text-foreground">Dimensiones (cm)</Label>
+                    <Label htmlFor="dimensiones" className="text-foreground">{t.send.dimensions}</Label>
                     <Input
                       id="dimensiones"
                       type="text"
@@ -87,7 +89,7 @@ const Enviar = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="origen" className="text-foreground">Dirección de Origen</Label>
+                  <Label htmlFor="origen" className="text-foreground">{t.send.origin}</Label>
                   <Input
                     id="origen"
                     type="text"
@@ -100,7 +102,7 @@ const Enviar = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="destino" className="text-foreground">Dirección de Destino</Label>
+                  <Label htmlFor="destino" className="text-foreground">{t.send.destination}</Label>
                   <Input
                     id="destino"
                     type="text"
@@ -124,17 +126,12 @@ const Enviar = () => {
                     htmlFor="recoleccion" 
                     className="text-sm text-foreground cursor-pointer"
                   >
-                    Solicitar recolección a domicilio (+$50 MXN)
+                    {t.send.pickup}
                   </Label>
                 </div>
 
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">Costo estimado:</p>
-                  <p className="text-2xl font-bold text-primary">$250 MXN</p>
-                </div>
-
                 <Button type="submit" className="w-full" variant="hero">
-                  Continuar al Pago
+                  {t.send.button}
                 </Button>
               </form>
             </CardContent>

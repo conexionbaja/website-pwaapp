@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { NavLink } from "@/components/NavLink";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Registro = () => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     nombre: "",
     email: "",
@@ -44,15 +46,15 @@ const Registro = () => {
         <div className="max-w-md mx-auto">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-2xl text-foreground">Crear Cuenta</CardTitle>
+              <CardTitle className="text-2xl text-foreground">{t.register.title}</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Regístrate para empezar a enviar paquetes
+                {t.register.title}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nombre" className="text-foreground">Nombre Completo</Label>
+                  <Label htmlFor="nombre" className="text-foreground">{t.register.name}</Label>
                   <Input
                     id="nombre"
                     type="text"
@@ -64,7 +66,7 @@ const Registro = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-foreground">Correo Electrónico</Label>
+                  <Label htmlFor="email" className="text-foreground">{t.register.email}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -76,7 +78,7 @@ const Registro = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="telefono" className="text-foreground">Teléfono</Label>
+                  <Label htmlFor="telefono" className="text-foreground">{t.register.phone}</Label>
                   <Input
                     id="telefono"
                     type="tel"
@@ -88,7 +90,7 @@ const Registro = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-foreground">Contraseña</Label>
+                  <Label htmlFor="password" className="text-foreground">{t.register.password}</Label>
                   <Input
                     id="password"
                     type="password"
@@ -100,7 +102,7 @@ const Registro = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-foreground">Confirmar Contraseña</Label>
+                  <Label htmlFor="confirmPassword" className="text-foreground">{t.register.confirmPassword}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -112,15 +114,15 @@ const Registro = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full" variant="hero">
-                  Registrarse
+                  {t.register.button}
                 </Button>
               </form>
               
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground">
-                  ¿Ya tienes cuenta?{" "}
+                  {t.register.hasAccount}{" "}
                   <NavLink to="/login" className="text-primary hover:underline">
-                    Inicia sesión aquí
+                    {t.register.login}
                   </NavLink>
                 </p>
               </div>
