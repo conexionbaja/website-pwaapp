@@ -5,6 +5,13 @@ export const en = {
     track: 'Track',
     login: 'Login',
     register: 'Sign Up',
+    services: 'Services',
+    blog: 'Blog',
+    contact: 'Contact',
+    quote: 'Quote',
+    admin: 'Admin',
+    logout: 'Logout',
+    myAccount: 'My Account',
   },
   home: {
     hero: {
@@ -14,33 +21,15 @@ export const en = {
     },
     howItWorks: {
       title: 'How It Works?',
-      step1: {
-        title: 'Sign Up',
-        description: 'Create your account in minutes',
-      },
-      step2: {
-        title: 'Send',
-        description: 'Provide your package details',
-      },
-      step3: {
-        title: 'Track',
-        description: 'Follow your shipment in real-time',
-      },
+      step1: { title: 'Sign Up', description: 'Create your account in minutes' },
+      step2: { title: 'Send', description: 'Provide your package details' },
+      step3: { title: 'Track', description: 'Follow your shipment in real-time' },
     },
     whyChoose: {
       title: 'Why Choose Us?',
-      speed: {
-        title: 'Fast Delivery',
-        description: 'We deliver your packages in record time',
-      },
-      secure: {
-        title: 'Secure Shipping',
-        description: 'Your package is protected at all times',
-      },
-      affordable: {
-        title: 'Affordable Prices',
-        description: 'The best rates on the market',
-      },
+      speed: { title: 'Fast Delivery', description: 'We deliver your packages in record time' },
+      secure: { title: 'Secure Shipping', description: 'Your package is protected at all times' },
+      affordable: { title: 'Affordable Prices', description: 'The best rates on the market' },
     },
     cta: {
       title: 'Ready to Send?',
@@ -55,6 +44,8 @@ export const en = {
     button: 'Sign In',
     noAccount: "Don't have an account?",
     register: 'Register here',
+    googleButton: 'Continue with Google',
+    or: 'or',
   },
   register: {
     title: 'Create Account',
@@ -66,17 +57,15 @@ export const en = {
     button: 'Sign Up',
     hasAccount: 'Already have an account?',
     login: 'Login here',
+    googleButton: 'Continue with Google',
+    or: 'or',
+    checkEmail: 'Check your email to confirm your account',
   },
   send: {
     title: 'Send Package',
     packageType: 'Package Type',
     selectType: 'Select type',
-    types: {
-      document: 'Document',
-      package: 'Package',
-      grocery: 'Groceries',
-      household: 'Household Items',
-    },
+    types: { document: 'Document', package: 'Package', grocery: 'Groceries', household: 'Household Items' },
     weight: 'Weight (kg)',
     dimensions: 'Dimensions',
     length: 'Length (cm)',
@@ -93,12 +82,7 @@ export const en = {
     trackingNumber: 'Tracking Number',
     placeholder: 'Enter your tracking number',
     button: 'Search',
-    status: {
-      pending: 'Pending',
-      pickup: 'Pickup Scheduled',
-      transit: 'In Transit',
-      delivered: 'Delivered',
-    },
+    status: { pending: 'Pending', pickup: 'Pickup Scheduled', transit: 'In Transit', delivered: 'Delivered' },
   },
   footer: {
     about: {
