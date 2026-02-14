@@ -5,6 +5,13 @@ export const es = {
     track: 'Rastrear',
     login: 'Iniciar Sesión',
     register: 'Registrarse',
+    services: 'Servicios',
+    blog: 'Blog',
+    contact: 'Contacto',
+    quote: 'Cotizar',
+    admin: 'Admin',
+    logout: 'Cerrar Sesión',
+    myAccount: 'Mi Cuenta',
   },
   home: {
     hero: {
@@ -55,6 +62,8 @@ export const es = {
     button: 'Entrar',
     noAccount: '¿No tienes cuenta?',
     register: 'Regístrate aquí',
+    googleButton: 'Continuar con Google',
+    or: 'o',
   },
   register: {
     title: 'Crear Cuenta',
@@ -66,6 +75,9 @@ export const es = {
     button: 'Registrarse',
     hasAccount: '¿Ya tienes cuenta?',
     login: 'Inicia sesión aquí',
+    googleButton: 'Continuar con Google',
+    or: 'o',
+    checkEmail: 'Revisa tu correo para confirmar tu cuenta',
   },
   send: {
     title: 'Enviar Paquete',
