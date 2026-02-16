@@ -10,11 +10,14 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Cotizar = () => {
   const { language } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '', origin: '', destination: '', package_type: '', weight: '', description: '' });
 
   const t = {
@@ -29,6 +32,8 @@ const Cotizar = () => {
     description: language === 'es' ? 'Descripción' : 'Description',
     submit: language === 'es' ? 'Enviar Solicitud' : 'Submit Request',
     success: language === 'es' ? '¡Solicitud enviada exitosamente!' : 'Request submitted successfully!',
+    portalMsg: language === 'es' ? 'Regístrate o inicia sesión para ver el estado de tu cotización en tu portal' : 'Register or log in to view your quote status in your portal',
+    goToPortal: language === 'es' ? 'Ir a Mi Portal' : 'Go to My Portal',
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,12 +46,37 @@ const Cotizar = () => {
     setLoading(false);
     if (error) { toast.error(error.message); return; }
     toast.success(t.success);
-    setForm({ name: '', email: '', phone: '', origin: '', destination: '', package_type: '', weight: '', description: '' });
+    if (user) {
+      navigate('/portal');
+    } else {
+      setSubmitted(true);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
   };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 pt-32 pb-20 text-center">
+          <Card className="max-w-md mx-auto bg-card border-border">
+            <CardContent className="pt-6 space-y-4">
+              <p className="text-lg text-foreground">{t.success}</p>
+              <p className="text-muted-foreground">{t.portalMsg}</p>
+              <div className="flex gap-2 justify-center">
+                <Link to="/login"><Button variant="outline">{language === 'es' ? 'Iniciar Sesión' : 'Login'}</Button></Link>
+                <Link to="/registro"><Button>{language === 'es' ? 'Registrarse' : 'Sign Up'}</Button></Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

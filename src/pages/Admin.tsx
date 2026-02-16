@@ -1,17 +1,27 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Newspaper, MessageSquare, Mail, Users, LogOut } from 'lucide-react';
+import { FileText, Newspaper, MessageSquare, Mail, Users, LogOut, Wrench, UserCheck, Truck, Package, Receipt } from 'lucide-react';
 import PagesEditor from '@/pages/admin/PagesEditor';
 import BlogEditor from '@/pages/admin/BlogEditor';
 import QuoteRequests from '@/pages/admin/QuoteRequests';
 import NewsletterComposer from '@/pages/admin/NewsletterComposer';
 import Subscribers from '@/pages/admin/Subscribers';
+import ServicesManager from '@/pages/admin/ServicesManager';
+import DriversManager from '@/pages/admin/DriversManager';
+import TrucksManager from '@/pages/admin/TrucksManager';
+import ShipmentsManager from '@/pages/admin/ShipmentsManager';
+import InvoicesManager from '@/pages/admin/InvoicesManager';
 
 const tabs = [
   { key: 'pages', label: 'Pages', icon: FileText },
   { key: 'blog', label: 'Blog/News', icon: Newspaper },
+  { key: 'services', label: 'Services', icon: Wrench },
   { key: 'quotes', label: 'Quote Requests', icon: MessageSquare },
+  { key: 'shipments', label: 'Shipments', icon: Package },
+  { key: 'drivers', label: 'Drivers', icon: UserCheck },
+  { key: 'trucks', label: 'Trucks', icon: Truck },
+  { key: 'invoices', label: 'Invoices', icon: Receipt },
   { key: 'newsletter', label: 'Newsletter', icon: Mail },
   { key: 'subscribers', label: 'Subscribers', icon: Users },
 ];
@@ -45,7 +55,12 @@ const Admin = () => {
       <main className="flex-1 p-6 overflow-auto">
         {activeTab === 'pages' && <PagesEditor />}
         {activeTab === 'blog' && <BlogEditor />}
+        {activeTab === 'services' && <ServicesManager />}
         {activeTab === 'quotes' && <QuoteRequests />}
+        {activeTab === 'shipments' && <ShipmentsManager />}
+        {activeTab === 'drivers' && <DriversManager />}
+        {activeTab === 'trucks' && <TrucksManager />}
+        {activeTab === 'invoices' && <InvoicesManager />}
         {activeTab === 'newsletter' && <NewsletterComposer />}
         {activeTab === 'subscribers' && <Subscribers />}
       </main>
