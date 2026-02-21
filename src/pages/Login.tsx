@@ -25,6 +25,7 @@ const Login = () => {
     if (user) {
       if (role === 'admin') navigate('/admin');
       else if (role === 'driver') navigate('/driver');
+      else if (role === 'executive') navigate('/executive');
       else navigate('/portal');
     }
   }, [user, role, navigate]);
