@@ -4,28 +4,42 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Package, Clock, Loader2 } from "lucide-react";
+import { CheckCircle, Package, Clock, Loader2, MapPin, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
-const statusSteps = ['pending', 'loading', 'in_transit', 'delivered'];
+const statusSteps = [
+  'created', 'assigned', 'picked_up', 'in_transit', 'passed_city',
+  'out_for_delivery', 'delivered',
+];
 
 const Rastreo = () => {
   const { t, language } = useLanguage();
   const [trackingNumber, setTrackingNumber] = useState("");
   const [shipment, setShipment] = useState<any>(null);
   const [pallets, setPallets] = useState<any[]>([]);
+  const [statusLogs, setStatusLogs] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   const statusLabel: Record<string, string> = {
+    created: language === 'es' ? 'Creado' : 'Created',
+    assigned: language === 'es' ? 'Asignado' : 'Assigned',
+    picked_up: language === 'es' ? 'Recogido' : 'Picked Up',
+    in_transit: language === 'es' ? 'En Tránsito' : 'In Transit',
+    passed_city: language === 'es' ? 'Pasó Ciudad' : 'Passed City',
+    out_for_delivery: language === 'es' ? 'En Reparto' : 'Out for Delivery',
+    delivered: language === 'es' ? 'Entregado' : 'Delivered',
+    delayed_mechanical: language === 'es' ? 'Retraso Mecánico' : 'Delayed (Mechanical)',
+    delayed_weather: language === 'es' ? 'Retraso Clima' : 'Delayed (Weather)',
+    delayed_custom: language === 'es' ? 'Retraso Otro' : 'Delayed (Other)',
+    on_time: language === 'es' ? 'A Tiempo' : 'On Time',
+    cancelled: language === 'es' ? 'Cancelado' : 'Cancelled',
+    // legacy
     pending: language === 'es' ? 'Pendiente' : 'Pending',
     loading: language === 'es' ? 'Cargando' : 'Loading',
-    in_transit: language === 'es' ? 'En Tránsito' : 'In Transit',
-    delivered: language === 'es' ? 'Entregado' : 'Delivered',
-    cancelled: language === 'es' ? 'Cancelado' : 'Cancelled',
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +49,7 @@ const Rastreo = () => {
     setNotFound(false);
     setShipment(null);
     setPallets([]);
+    setStatusLogs([]);
 
     const { data } = await supabase
       .from('shipments')
@@ -51,13 +66,13 @@ const Rastreo = () => {
 
     setShipment(data);
 
-    const { data: palletData } = await supabase
-      .from('shipment_pallets')
-      .select('*')
-      .eq('shipment_id', data.id)
-      .order('position');
+    const [palletRes, logRes] = await Promise.all([
+      supabase.from('shipment_pallets').select('*').eq('shipment_id', data.id).order('position'),
+      supabase.from('shipment_status_log').select('*').eq('shipment_id', data.id).order('created_at', { ascending: true }),
+    ]);
 
-    setPallets(palletData || []);
+    setPallets(palletRes.data || []);
+    setStatusLogs(logRes.data || []);
     setSearching(false);
   };
 
@@ -97,14 +112,34 @@ const Rastreo = () => {
                 <div className="mt-8 space-y-6">
                   <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground mb-1">{language === 'es' ? 'Estado actual' : 'Current status'}:</p>
-                    <p className="text-lg font-semibold text-primary">{statusLabel[shipment.status]}</p>
+                    <p className="text-lg font-semibold text-primary">{statusLabel[shipment.status] || shipment.status}</p>
                     <p className="text-sm text-muted-foreground mt-1">{shipment.origin} → {shipment.destination}</p>
                     {shipment.drivers?.full_name && <p className="text-xs text-muted-foreground mt-1">{language === 'es' ? 'Conductor' : 'Driver'}: {shipment.drivers.full_name}</p>}
+                    {shipment.estimated_delivery_at && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        ETA: {new Date(shipment.estimated_delivery_at).toLocaleDateString()}
+                      </p>
+                    )}
+                    {shipment.current_location && (
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />{shipment.current_location}
+                      </p>
+                    )}
+                    {shipment.delay_reason && (
+                      <p className="text-xs text-orange-400 mt-1 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />{shipment.delay_reason}
+                      </p>
+                    )}
+                    {shipment.driver_notes && (
+                      <p className="text-xs text-muted-foreground mt-1">📝 {shipment.driver_notes}</p>
+                    )}
                   </div>
 
+                  {/* Timeline */}
                   <div className="space-y-4">
                     {statusSteps.map((step, i) => {
                       const done = i <= currentStep;
+                      const logEntry = statusLogs.find(l => l.status === step);
                       return (
                         <div key={step} className="flex gap-4">
                           <div className="flex flex-col items-center">
@@ -115,6 +150,8 @@ const Rastreo = () => {
                           </div>
                           <div className="pt-2">
                             <p className={`font-semibold ${done ? 'text-foreground' : 'text-muted-foreground'}`}>{statusLabel[step]}</p>
+                            {logEntry && <p className="text-xs text-muted-foreground">{new Date(logEntry.created_at).toLocaleString()}</p>}
+                            {logEntry?.location && <p className="text-xs text-muted-foreground">📍 {logEntry.location}</p>}
                           </div>
                         </div>
                       );
@@ -128,6 +165,7 @@ const Rastreo = () => {
                         {pallets.map((p: any) => (
                           <div key={p.id} className="bg-primary/10 border border-primary/20 rounded p-2 text-xs">
                             <p className="font-medium text-foreground">{p.description}</p>
+                            {p.destination_city && <p className="text-muted-foreground">→ {p.destination_city}</p>}
                             {p.weight_kg && <p className="text-muted-foreground">{p.weight_kg} kg</p>}
                             {p.dimensions && <p className="text-muted-foreground">{p.dimensions}</p>}
                           </div>

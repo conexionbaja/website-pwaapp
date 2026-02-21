@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Newspaper, MessageSquare, Mail, Users, LogOut, Wrench, UserCheck, Truck, Package, Receipt } from 'lucide-react';
+import { FileText, Newspaper, MessageSquare, Mail, Users, LogOut, Wrench, UserCheck, Truck, Package, Receipt, BarChart3 } from 'lucide-react';
 import PagesEditor from '@/pages/admin/PagesEditor';
 import BlogEditor from '@/pages/admin/BlogEditor';
 import QuoteRequests from '@/pages/admin/QuoteRequests';
@@ -12,6 +12,7 @@ import DriversManager from '@/pages/admin/DriversManager';
 import TrucksManager from '@/pages/admin/TrucksManager';
 import ShipmentsManager from '@/pages/admin/ShipmentsManager';
 import InvoicesManager from '@/pages/admin/InvoicesManager';
+import Reports from '@/pages/admin/Reports';
 
 const tabs = [
   { key: 'pages', label: 'Pages', icon: FileText },
@@ -22,6 +23,7 @@ const tabs = [
   { key: 'drivers', label: 'Drivers', icon: UserCheck },
   { key: 'trucks', label: 'Trucks', icon: Truck },
   { key: 'invoices', label: 'Invoices', icon: Receipt },
+  { key: 'reports', label: 'Reports', icon: BarChart3 },
   { key: 'newsletter', label: 'Newsletter', icon: Mail },
   { key: 'subscribers', label: 'Subscribers', icon: Users },
 ];
@@ -61,6 +63,7 @@ const Admin = () => {
         {activeTab === 'drivers' && <DriversManager />}
         {activeTab === 'trucks' && <TrucksManager />}
         {activeTab === 'invoices' && <InvoicesManager />}
+        {activeTab === 'reports' && <Reports />}
         {activeTab === 'newsletter' && <NewsletterComposer />}
         {activeTab === 'subscribers' && <Subscribers />}
       </main>
