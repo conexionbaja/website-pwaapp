@@ -10,10 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 
+const invoiceStatuses = ['pending', 'paid_full', 'paid_partial', 'cod', 'online_on_delivery', 'cancelled', 'overdue'];
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500/20 text-yellow-400',
-  paid: 'bg-green-500/20 text-green-400',
+  paid_full: 'bg-green-500/20 text-green-400',
+  paid_partial: 'bg-teal-500/20 text-teal-400',
+  cod: 'bg-blue-500/20 text-blue-400',
+  online_on_delivery: 'bg-indigo-500/20 text-indigo-400',
   cancelled: 'bg-red-500/20 text-red-400',
+  overdue: 'bg-orange-500/20 text-orange-400',
+  // legacy
+  paid: 'bg-green-500/20 text-green-400',
 };
 
 interface InvoiceForm { shipment_id: string; user_id: string; amount: string; currency: string; }
@@ -91,16 +98,12 @@ const InvoicesManager = () => {
               <TableCell className="text-foreground font-mono text-sm">{inv.invoice_number}</TableCell>
               <TableCell className="text-muted-foreground">{inv.shipments?.tracking_number || '—'}</TableCell>
               <TableCell className="text-foreground">${inv.amount} {inv.currency}</TableCell>
-              <TableCell><span className={`px-2 py-1 rounded text-xs ${statusColors[inv.status]}`}>{inv.status}</span></TableCell>
+              <TableCell><span className={`px-2 py-1 rounded text-xs ${statusColors[inv.status] || ''}`}>{inv.status?.replace(/_/g, ' ')}</span></TableCell>
               <TableCell className="text-muted-foreground text-sm">{new Date(inv.created_at).toLocaleDateString()}</TableCell>
               <TableCell>
                 <Select value={inv.status} onValueChange={v => updateStatus.mutate({ id: inv.id, status: v })}>
-                  <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">pending</SelectItem>
-                    <SelectItem value="paid">paid</SelectItem>
-                    <SelectItem value="cancelled">cancelled</SelectItem>
-                  </SelectContent>
+                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>{invoiceStatuses.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
                 </Select>
               </TableCell>
             </TableRow>

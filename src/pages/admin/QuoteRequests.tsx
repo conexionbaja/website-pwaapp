@@ -7,8 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
-import { Package } from 'lucide-react';
+import { Package, Receipt, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500/20 text-yellow-400',
@@ -21,6 +25,7 @@ const QuoteRequests = () => {
   const [quoteDialog, setQuoteDialog] = useState<any>(null);
   const [price, setPrice] = useState('');
   const [notes, setNotes] = useState('');
+  const [validUntil, setValidUntil] = useState<Date | undefined>(undefined);
 
   const { data: requests } = useQuery({
     queryKey: ['quote_requests'],
@@ -47,23 +52,22 @@ const QuoteRequests = () => {
       const updates: any = { status: 'quoted' };
       if (price) updates.quote_price = parseFloat(price);
       if (notes) updates.quote_notes = notes;
+      if (validUntil) updates.valid_until = validUntil.toISOString();
       const { error } = await supabase.from('quote_requests').update(updates).eq('id', quoteDialog.id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quote_requests'] });
       toast.success('Quote saved!');
-      setQuoteDialog(null); setPrice(''); setNotes('');
+      setQuoteDialog(null); setPrice(''); setNotes(''); setValidUntil(undefined);
     },
   });
 
   const convertToShipment = useMutation({
     mutationFn: async (r: any) => {
       const { error } = await supabase.from('shipments').insert({
-        quote_request_id: r.id,
-        user_id: r.user_id || null,
-        origin: r.origin,
-        destination: r.destination,
+        quote_request_id: r.id, user_id: r.user_id || null,
+        origin: r.origin, destination: r.destination,
         notes: `From quote: ${r.name} - ${r.description || ''}`,
       });
       if (error) throw error;
@@ -77,10 +81,29 @@ const QuoteRequests = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const convertToInvoice = useMutation({
+    mutationFn: async (r: any) => {
+      if (!r.quote_price) { toast.error('No price set on this quote'); throw new Error('No price'); }
+      if (!r.user_id) { toast.error('No user linked to this quote'); throw new Error('No user'); }
+      const { error } = await supabase.from('invoices').insert({
+        amount: r.quote_price, user_id: r.user_id,
+      });
+      if (error) throw error;
+      await supabase.from('quote_requests').update({ status: 'closed' }).eq('id', r.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quote_requests'] });
+      queryClient.invalidateQueries({ queryKey: ['admin_invoices'] });
+      toast.success('Invoice created from quote!');
+    },
+    onError: (e: any) => { if (e.message !== 'No price' && e.message !== 'No user') toast.error(e.message); },
+  });
+
   const openQuoteDialog = (r: any) => {
     setQuoteDialog(r);
     setPrice(r.quote_price?.toString() || '');
     setNotes(r.quote_notes || '');
+    setValidUntil(r.valid_until ? new Date(r.valid_until) : undefined);
   };
 
   return (
@@ -92,6 +115,19 @@ const QuoteRequests = () => {
           <DialogHeader><DialogTitle>Set Quote Price & Notes</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label>Price</Label><Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" /></div>
+            <div><Label>Valid Until</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !validUntil && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {validUntil ? format(validUntil, 'PPP') : 'Pick a date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={validUntil} onSelect={setValidUntil} initialFocus className={cn("p-3 pointer-events-auto")} />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Quote details..." /></div>
             <Button className="w-full" onClick={() => saveQuote.mutate()}>Save & Mark as Quoted</Button>
           </div>
@@ -106,6 +142,7 @@ const QuoteRequests = () => {
               <TableHead>Email</TableHead>
               <TableHead>Origin → Dest</TableHead>
               <TableHead>Price</TableHead>
+              <TableHead>Valid Until</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Actions</TableHead>
@@ -118,14 +155,20 @@ const QuoteRequests = () => {
                 <TableCell className="text-muted-foreground">{r.email}</TableCell>
                 <TableCell className="text-muted-foreground">{r.origin} → {r.destination}</TableCell>
                 <TableCell className="text-foreground">{r.quote_price ? `$${r.quote_price}` : '—'}</TableCell>
-                <TableCell><span className={`px-2 py-1 rounded text-xs ${statusColors[r.status]}`}>{r.status}</span></TableCell>
+                <TableCell className="text-muted-foreground text-sm">{r.valid_until ? new Date(r.valid_until).toLocaleDateString() : '—'}</TableCell>
+                <TableCell><span className={`px-2 py-1 rounded text-xs ${statusColors[r.status] || ''}`}>{r.status}</span></TableCell>
                 <TableCell className="text-muted-foreground text-sm">{new Date(r.created_at).toLocaleDateString()}</TableCell>
                 <TableCell className="flex gap-1">
                   <Button size="sm" variant="outline" onClick={() => openQuoteDialog(r)}>Quote</Button>
                   {r.status === 'quoted' && (
-                    <Button size="sm" variant="outline" onClick={() => convertToShipment.mutate(r)}>
-                      <Package className="h-3 w-3 mr-1" />Shipment
-                    </Button>
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => convertToShipment.mutate(r)}>
+                        <Package className="h-3 w-3 mr-1" />Shipment
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => convertToInvoice.mutate(r)}>
+                        <Receipt className="h-3 w-3 mr-1" />Invoice
+                      </Button>
+                    </>
                   )}
                   {r.status !== 'closed' && <Button size="sm" variant="ghost" onClick={() => updateStatus.mutate({ id: r.id, status: 'closed' })}>Close</Button>}
                 </TableCell>
