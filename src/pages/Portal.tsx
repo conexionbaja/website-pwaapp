@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
@@ -7,8 +7,13 @@ import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { FileText, Package, Receipt, ChevronDown, ChevronUp, History } from 'lucide-react';
+import { FileText, Package, Receipt, ChevronDown, ChevronUp, History, User, Save, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500/20 text-yellow-400',
@@ -37,6 +42,7 @@ const statusColors: Record<string, string> = {
 const Portal = () => {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const queryClient = useQueryClient();
   const [expandedShipment, setExpandedShipment] = useState<string | null>(null);
 
   const t = {
@@ -44,9 +50,22 @@ const Portal = () => {
     quotes: language === 'es' ? 'Mis Cotizaciones' : 'My Quotes',
     shipments: language === 'es' ? 'Mis Envíos' : 'My Shipments',
     invoices: language === 'es' ? 'Mis Facturas' : 'My Invoices',
+    profile: language === 'es' ? 'Mi Perfil' : 'My Profile',
     noData: language === 'es' ? 'No hay registros aún' : 'No records yet',
+    save: language === 'es' ? 'Guardar' : 'Save',
+    saved: language === 'es' ? 'Guardado' : 'Saved',
+    fullName: language === 'es' ? 'Nombre Completo' : 'Full Name',
+    phone: language === 'es' ? 'Teléfono' : 'Phone',
+    changePassword: language === 'es' ? 'Cambiar Contraseña' : 'Change Password',
+    newPassword: language === 'es' ? 'Nueva Contraseña' : 'New Password',
+    confirmPassword: language === 'es' ? 'Confirmar Contraseña' : 'Confirm Password',
+    updatePassword: language === 'es' ? 'Actualizar Contraseña' : 'Update Password',
+    passwordUpdated: language === 'es' ? 'Contraseña actualizada' : 'Password updated',
+    passwordMismatch: language === 'es' ? 'Las contraseñas no coinciden' : 'Passwords do not match',
+    newsletter: language === 'es' ? 'Suscrito al boletín' : 'Subscribed to newsletter',
   };
 
+  // ---- Quotes ----
   const { data: quotes } = useQuery({
     queryKey: ['portal_quotes', user?.id],
     queryFn: async () => {
@@ -56,6 +75,7 @@ const Portal = () => {
     enabled: !!user,
   });
 
+  // ---- Shipments ----
   const { data: shipments } = useQuery({
     queryKey: ['portal_shipments', user?.id],
     queryFn: async () => {
@@ -85,6 +105,7 @@ const Portal = () => {
     enabled: !!expandedShipment,
   });
 
+  // ---- Invoices ----
   const { data: invoices } = useQuery({
     queryKey: ['portal_invoices', user?.id],
     queryFn: async () => {
@@ -93,6 +114,88 @@ const Portal = () => {
     },
     enabled: !!user,
   });
+
+  // ---- Profile ----
+  const { data: profile } = useQuery({
+    queryKey: ['portal_profile', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('profiles').select('*').eq('user_id', user!.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const [profileForm, setProfileForm] = useState({ full_name: '', phone: '' });
+  const [passwordForm, setPasswordForm] = useState({ password: '', confirm: '' });
+  const [newsletterChecked, setNewsletterChecked] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setProfileForm({ full_name: profile.full_name || '', phone: profile.phone || '' });
+    }
+  }, [profile]);
+
+  // Newsletter check
+  const { data: newsletterSub } = useQuery({
+    queryKey: ['portal_newsletter', user?.email],
+    queryFn: async () => {
+      const { data } = await supabase.from('newsletter_subscribers').select('*').eq('email', user!.email!).maybeSingle();
+      return data;
+    },
+    enabled: !!user?.email,
+  });
+
+  useEffect(() => {
+    if (newsletterSub) setNewsletterChecked(newsletterSub.active);
+  }, [newsletterSub]);
+
+  const profileMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('profiles').upsert({
+        user_id: user!.id,
+        full_name: profileForm.full_name,
+        phone: profileForm.phone,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(t.saved);
+      queryClient.invalidateQueries({ queryKey: ['portal_profile'] });
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const handlePasswordChange = async () => {
+    if (passwordForm.password !== passwordForm.confirm) {
+      toast.error(t.passwordMismatch);
+      return;
+    }
+    if (passwordForm.password.length < 6) {
+      toast.error(language === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters');
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: passwordForm.password });
+    if (error) { toast.error(error.message); return; }
+    toast.success(t.passwordUpdated);
+    setPasswordForm({ password: '', confirm: '' });
+  };
+
+  const handleNewsletterToggle = async (checked: boolean) => {
+    setNewsletterChecked(checked);
+    if (!user?.email) return;
+    if (checked) {
+      await supabase.from('newsletter_subscribers').upsert(
+        { email: user.email, active: true, unsubscribed_at: null },
+        { onConflict: 'email' }
+      );
+    } else {
+      await supabase.from('newsletter_subscribers').update(
+        { active: false, unsubscribed_at: new Date().toISOString() }
+      ).eq('email', user.email);
+    }
+    queryClient.invalidateQueries({ queryKey: ['portal_newsletter'] });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,8 +207,10 @@ const Portal = () => {
             <TabsTrigger value="quotes" className="flex items-center gap-2"><FileText className="h-4 w-4" />{t.quotes}</TabsTrigger>
             <TabsTrigger value="shipments" className="flex items-center gap-2"><Package className="h-4 w-4" />{t.shipments}</TabsTrigger>
             <TabsTrigger value="invoices" className="flex items-center gap-2"><Receipt className="h-4 w-4" />{t.invoices}</TabsTrigger>
+            <TabsTrigger value="profile" className="flex items-center gap-2"><User className="h-4 w-4" />{t.profile}</TabsTrigger>
           </TabsList>
 
+          {/* Quotes Tab */}
           <TabsContent value="quotes">
             {quotes?.length === 0 ? <p className="text-muted-foreground">{t.noData}</p> : (
               <Table>
@@ -125,6 +230,7 @@ const Portal = () => {
             )}
           </TabsContent>
 
+          {/* Shipments Tab */}
           <TabsContent value="shipments">
             {shipments?.length === 0 ? <p className="text-muted-foreground">{t.noData}</p> : (
               <Table>
@@ -144,15 +250,12 @@ const Portal = () => {
                         <TableRow key={`${s.id}-p`}>
                           <TableCell colSpan={6}>
                             <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-                              {/* Info */}
                               {(s.current_location || s.delay_reason) && (
                                 <div className="flex gap-4 text-sm">
                                   {s.current_location && <p className="text-muted-foreground">📍 {s.current_location}</p>}
                                   {s.delay_reason && <p className="text-orange-400">⚠️ {s.delay_reason}</p>}
                                 </div>
                               )}
-
-                              {/* Pallets */}
                               <div>
                                 <h4 className="font-semibold text-foreground mb-2">{language === 'es' ? 'Tarimas' : 'Pallets'}</h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -166,8 +269,6 @@ const Portal = () => {
                                   {(!pallets || pallets.length === 0) && <p className="text-muted-foreground text-sm">{t.noData}</p>}
                                 </div>
                               </div>
-
-                              {/* Status History */}
                               {statusLogs && statusLogs.length > 0 && (
                                 <div className="border-t border-border pt-3">
                                   <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2"><History className="h-4 w-4" />{language === 'es' ? 'Historial' : 'History'}</h4>
@@ -196,6 +297,7 @@ const Portal = () => {
             )}
           </TabsContent>
 
+          {/* Invoices Tab */}
           <TabsContent value="invoices">
             {invoices?.length === 0 ? <p className="text-muted-foreground">{t.noData}</p> : (
               <Table>
@@ -214,6 +316,73 @@ const Portal = () => {
                 </TableBody>
               </Table>
             )}
+          </TabsContent>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            <div className="max-w-lg space-y-6">
+              {/* Profile Info */}
+              <Card className="bg-card border-border">
+                <CardHeader><CardTitle className="text-foreground flex items-center gap-2"><User className="h-5 w-5" />{t.profile}</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-foreground">{t.fullName}</Label>
+                    <Input
+                      value={profileForm.full_name}
+                      onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                      className="bg-background"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">{t.phone}</Label>
+                    <Input
+                      value={profileForm.phone}
+                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                      className="bg-background"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="newsletter"
+                      checked={newsletterChecked}
+                      onCheckedChange={(checked) => handleNewsletterToggle(checked as boolean)}
+                    />
+                    <Label htmlFor="newsletter" className="text-sm text-foreground cursor-pointer">{t.newsletter}</Label>
+                  </div>
+                  <Button onClick={() => profileMutation.mutate()} disabled={profileMutation.isPending} className="flex items-center gap-2">
+                    <Save className="h-4 w-4" />{t.save}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Password Change */}
+              <Card className="bg-card border-border">
+                <CardHeader><CardTitle className="text-foreground flex items-center gap-2"><Lock className="h-5 w-5" />{t.changePassword}</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-foreground">{t.newPassword}</Label>
+                    <Input
+                      type="password"
+                      value={passwordForm.password}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
+                      className="bg-background"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">{t.confirmPassword}</Label>
+                    <Input
+                      type="password"
+                      value={passwordForm.confirm}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                      className="bg-background"
+                    />
+                  </div>
+                  <Button onClick={handlePasswordChange} variant="outline" className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" />{t.updatePassword}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
