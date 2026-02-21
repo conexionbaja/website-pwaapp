@@ -5,7 +5,11 @@ import type { User, Session } from '@supabase/supabase-js';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  role: string | null;
   isAdmin: boolean;
+  isDriver: boolean;
+  isExecutive: boolean;
+  isLogisticsManager: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
 }
@@ -15,17 +19,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const checkAdminRole = async (userId: string) => {
+  const isAdmin = role === 'admin';
+  const isDriver = role === 'driver';
+  const isExecutive = role === 'executive';
+  const isLogisticsManager = role === 'logistics_manager';
+
+  const checkUserRole = async (userId: string) => {
     const { data } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', 'admin')
       .maybeSingle();
-    setIsAdmin(!!data);
+    setRole(data?.role ?? null);
   };
 
   useEffect(() => {
@@ -33,9 +41,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        setTimeout(() => checkAdminRole(session.user.id), 0);
+        setTimeout(() => checkUserRole(session.user.id), 0);
       } else {
-        setIsAdmin(false);
+        setRole(null);
       }
       setLoading(false);
     });
@@ -44,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdminRole(session.user.id);
+        checkUserRole(session.user.id);
       }
       setLoading(false);
     });
@@ -57,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, isAdmin, isDriver, isExecutive, isLogisticsManager, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
