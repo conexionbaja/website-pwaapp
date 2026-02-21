@@ -17,9 +17,10 @@ import Cotizar from "./pages/Cotizar";
 import Contacto from "./pages/Contacto";
 import Admin from "./pages/Admin";
 import Portal from "./pages/Portal";
-import AdminRoute from "./components/AdminRoute";
+import AdminRoute, { RoleRoute } from "./components/AdminRoute";
 import WhatsAppButton from "./components/WhatsAppButton";
 import NotFound from "./pages/NotFound";
+import DriverPortal from "./pages/DriverPortal";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
           <Route path="/cotizar" element={<Cotizar />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
+          <Route path="/driver" element={<RoleRoute allowedRoles={['driver']}><DriverPortal /></RoleRoute>} />
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
