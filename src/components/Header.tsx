@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
-import { Menu, X, Globe, Shield } from "lucide-react";
+import { Menu, X, Globe, Shield, Truck } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/badge.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isDriver, signOut } = useAuth();
 
   const toggleLanguage = () => {
     setLanguage(language === 'es' ? 'en' : 'es');
@@ -52,6 +52,11 @@ const Header = () => {
                 <NavLink to="/admin"><Shield className="h-4 w-4 mr-1" />{t.header.admin}</NavLink>
               </Button>
             )}
+            {isDriver && (
+              <Button variant="ghost" size="sm" asChild>
+                <NavLink to="/driver"><Truck className="h-4 w-4 mr-1" />Driver Portal</NavLink>
+              </Button>
+            )}
             {user ? (
               <Button variant="ghost" size="sm" onClick={signOut}>{t.header.logout}</Button>
             ) : (
@@ -81,6 +86,11 @@ const Header = () => {
               {isAdmin && (
                 <Button variant="ghost" asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
                   <NavLink to="/admin"><Shield className="h-4 w-4 mr-1" />{t.header.admin}</NavLink>
+                </Button>
+              )}
+              {isDriver && (
+                <Button variant="ghost" asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                  <NavLink to="/driver"><Truck className="h-4 w-4 mr-1" />Driver Portal</NavLink>
                 </Button>
               )}
               {user ? (
