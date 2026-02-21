@@ -101,30 +101,36 @@ export type Database = {
       drivers: {
         Row: {
           active: boolean
+          availability_status: string
           created_at: string
           full_name: string
           id: string
           license_number: string | null
           phone: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           active?: boolean
+          availability_status?: string
           created_at?: string
           full_name: string
           id?: string
           license_number?: string | null
           phone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           active?: boolean
+          availability_status?: string
           created_at?: string
           full_name?: string
           id?: string
           license_number?: string | null
           phone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -274,6 +280,7 @@ export type Database = {
           quote_price: number | null
           status: string
           user_id: string | null
+          valid_until: string | null
           weight: string | null
         }
         Insert: {
@@ -290,6 +297,7 @@ export type Database = {
           quote_price?: number | null
           status?: string
           user_id?: string | null
+          valid_until?: string | null
           weight?: string | null
         }
         Update: {
@@ -306,6 +314,7 @@ export type Database = {
           quote_price?: number | null
           status?: string
           user_id?: string | null
+          valid_until?: string | null
           weight?: string | null
         }
         Relationships: []
@@ -351,30 +360,57 @@ export type Database = {
       }
       shipment_pallets: {
         Row: {
+          client_name: string | null
+          cost: number | null
           created_at: string
+          delivery_address: string | null
+          delivery_contact: string | null
           description: string
+          destination_city: string | null
           dimensions: string | null
           id: string
+          load_type: string
+          origin_city: string | null
+          payment_status: string
           position: number
           shipment_id: string
+          special_handling: string | null
           weight_kg: number | null
         }
         Insert: {
+          client_name?: string | null
+          cost?: number | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_contact?: string | null
           description?: string
+          destination_city?: string | null
           dimensions?: string | null
           id?: string
+          load_type?: string
+          origin_city?: string | null
+          payment_status?: string
           position?: number
           shipment_id: string
+          special_handling?: string | null
           weight_kg?: number | null
         }
         Update: {
+          client_name?: string | null
+          cost?: number | null
           created_at?: string
+          delivery_address?: string | null
+          delivery_contact?: string | null
           description?: string
+          destination_city?: string | null
           dimensions?: string | null
           id?: string
+          load_type?: string
+          origin_city?: string | null
+          payment_status?: string
           position?: number
           shipment_id?: string
+          special_handling?: string | null
           weight_kg?: number | null
         }
         Relationships: [
@@ -387,11 +423,54 @@ export type Database = {
           },
         ]
       }
+      shipment_status_log: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          location: string | null
+          notes: string | null
+          shipment_id: string
+          status: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          shipment_id: string
+          status: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          shipment_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_status_log_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shipments: {
         Row: {
+          actual_delivery_at: string | null
           created_at: string
+          current_location: string | null
+          delay_reason: string | null
           destination: string
           driver_id: string | null
+          driver_notes: string | null
+          estimated_delivery_at: string | null
           id: string
           notes: string | null
           origin: string
@@ -403,9 +482,14 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          actual_delivery_at?: string | null
           created_at?: string
+          current_location?: string | null
+          delay_reason?: string | null
           destination: string
           driver_id?: string | null
+          driver_notes?: string | null
+          estimated_delivery_at?: string | null
           id?: string
           notes?: string | null
           origin: string
@@ -417,9 +501,14 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          actual_delivery_at?: string | null
           created_at?: string
+          current_location?: string | null
+          delay_reason?: string | null
           destination?: string
           driver_id?: string | null
+          driver_notes?: string | null
+          estimated_delivery_at?: string | null
           id?: string
           notes?: string | null
           origin?: string
@@ -457,32 +546,58 @@ export type Database = {
       trucks: {
         Row: {
           active: boolean
+          assigned_driver_id: string | null
           capacity_kg: number | null
+          capacity_pallets: number | null
           created_at: string
+          current_status: string
           id: string
+          last_maintenance_date: string | null
           model: string | null
           plate_number: string
           updated_at: string
+          vehicle_type: string
+          vin: string | null
         }
         Insert: {
           active?: boolean
+          assigned_driver_id?: string | null
           capacity_kg?: number | null
+          capacity_pallets?: number | null
           created_at?: string
+          current_status?: string
           id?: string
+          last_maintenance_date?: string | null
           model?: string | null
           plate_number: string
           updated_at?: string
+          vehicle_type?: string
+          vin?: string | null
         }
         Update: {
           active?: boolean
+          assigned_driver_id?: string | null
           capacity_kg?: number | null
+          capacity_pallets?: number | null
           created_at?: string
+          current_status?: string
           id?: string
+          last_maintenance_date?: string | null
           model?: string | null
           plate_number?: string
           updated_at?: string
+          vehicle_type?: string
+          vin?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trucks_assigned_driver_id_fkey"
+            columns: ["assigned_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -507,6 +622,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_driver_id_for_user: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -516,7 +632,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "driver" | "logistics_manager" | "executive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -644,7 +760,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "driver", "logistics_manager", "executive"],
     },
   },
 } as const
