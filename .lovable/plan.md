@@ -1,61 +1,59 @@
 
 
-# Phase C: Driver Portal
+# Phase D: Executive Dashboard and Reports
 
-Build a dedicated `/driver` route where drivers log in with their regular auth account (linked via `drivers.user_id`) and manage their daily workflow: toggle availability, view assigned shipments, update shipment status/location, and add notes.
-
----
-
-## 1. New Route: `/driver`
-
-Add a `/driver` route in `App.tsx` protected by `RoleRoute` with `allowedRoles={['driver']}`. This redirects non-driver users away.
+Replace the placeholder Reports page with a full analytics dashboard showing real-time KPIs, revenue charts, and operational metrics. Also create a dedicated `/executive` route for executive-role users.
 
 ---
 
-## 2. New Page: `src/pages/DriverPortal.tsx`
+## 1. Reports Page: `src/pages/admin/Reports.tsx` (Rewrite)
 
-A single-page dashboard with three sections:
+Replace the "Coming soon" placeholder with a full dashboard containing:
 
-### 2a. Header Bar
-- Driver name + phone (queried from `drivers` table using `user_id = auth.uid()`)
-- Availability toggle (switch between `available`, `unavailable`, `on_route`) -- updates `drivers.availability_status` in real time
+### 1a. KPI Summary Cards (top row)
+Four metric cards queried from existing tables:
+- **Active Shipments**: Count of shipments where status is not `delivered` or `cancelled`
+- **Revenue (month)**: Sum of `invoices.amount` for current month where status contains `paid`
+- **Fleet Utilization**: Percentage of trucks with `current_status = 'in_transit'` vs total active trucks
+- **Pending Quotes**: Count of `quote_requests` with `status = 'pending'`
 
-### 2b. Assigned Shipments List
-- Query `shipments` where `driver_id` matches the driver's record
-- Show cards with: tracking number, origin, destination, status badge, ETA, current location
-- Filter tabs: "Active" (non-delivered/cancelled) and "Completed" (delivered/cancelled)
+### 1b. Revenue Chart (Recharts BarChart)
+- Monthly revenue for the last 6 months, grouped from `invoices` table by `created_at` month
+- Bar chart using the already-installed `recharts` library
+- Currency displayed in MXN
 
-### 2c. Shipment Detail (expandable or click-to-open)
-When a driver selects a shipment:
-- **Status Update**: Dropdown to change status (limited driver set: `picked_up`, `in_transit`, `passed_city`, `out_for_delivery`, `delivered`, `delayed_mechanical`, `delayed_weather`, `delayed_custom`)
-- **Current Location**: Text input to update `shipments.current_location`
-- **Driver Notes**: Textarea to update `shipments.driver_notes`
-- **Pallet List**: Read-only view of pallets sorted by position, showing destination city, load type, client name, weight
-- **Status History Timeline**: Same timeline component as admin, querying `shipment_status_log`
+### 1c. Shipment Status Breakdown (Recharts PieChart)
+- Count of shipments grouped by status
+- Pie chart with color-coded segments matching the status badge colors
 
-Every status change inserts a row into `shipment_status_log` with `changed_by = auth.uid()`.
+### 1d. Recent Activity Feed
+- Last 10 entries from `shipment_status_log` joined with shipment tracking numbers
+- Shows: timestamp, tracking number, old status arrow new status, changed by
 
----
-
-## 3. Navigation Update
-
-- Add a "Driver Portal" link in the Header for users with the `driver` role
-- The header already uses `useAuth()`, so we check `isDriver` and show the link conditionally
+### 1e. Driver Availability Summary
+- Simple table/list: count of drivers by `availability_status` (available, unavailable, on_route)
 
 ---
 
-## 4. Login Redirect
+## 2. Executive Route: `/executive`
 
-Update the Login page so that after successful login:
-- If user has `driver` role, redirect to `/driver`
-- If user has `admin` role, redirect to `/admin`
-- Otherwise, redirect to `/portal`
+- Add a `/executive` route in `App.tsx` protected by `RoleRoute` with `allowedRoles={['executive']}`
+- Create `src/pages/ExecutiveDashboard.tsx` that renders the same Reports component but wrapped in its own layout with Header/Footer (since executives are not admins and don't see the admin sidebar)
 
 ---
 
-## No Database Changes
+## 3. Navigation Updates
 
-All required columns, tables, and RLS policies were created in Phase A. The driver portal is purely frontend.
+- Add "Dashboard" link in Header for users with `executive` role
+- Update Login redirect: executive role goes to `/executive`
+
+---
+
+## 4. Database Changes
+
+**None required for data.** All tables and RLS policies already grant SELECT access to executives.
+
+One small addition: enable the `shipment_status_log` table for anonymous SELECT by tracking number lookup (not needed -- executives already have SELECT via RLS). No migration needed.
 
 ---
 
@@ -63,20 +61,22 @@ All required columns, tables, and RLS policies were created in Phase A. The driv
 
 | File | Purpose |
 |---|---|
-| `src/pages/DriverPortal.tsx` | Full driver dashboard page |
+| `src/pages/ExecutiveDashboard.tsx` | Executive-facing dashboard page with Header/Footer |
 
 ## Files to Modify
 
 | File | Changes |
 |---|---|
-| `src/App.tsx` | Add `/driver` route with `RoleRoute` guard |
-| `src/components/Header.tsx` | Add conditional "Driver Portal" nav link |
-| `src/pages/Login.tsx` | Role-based redirect after login |
+| `src/pages/admin/Reports.tsx` | Full rewrite: KPI cards, revenue chart, pie chart, activity feed, driver summary |
+| `src/App.tsx` | Add `/executive` route with RoleRoute guard |
+| `src/components/Header.tsx` | Add conditional "Dashboard" nav link for executives |
+| `src/pages/Login.tsx` | Add executive role redirect to `/executive` |
 
 ## Implementation Order
 
-1. Create `DriverPortal.tsx` with availability toggle + shipment list + detail panel
-2. Add route in `App.tsx`
-3. Update `Header.tsx` with driver nav link
-4. Update `Login.tsx` with role-based redirect
+1. Rewrite `Reports.tsx` with KPI cards + charts + activity feed
+2. Create `ExecutiveDashboard.tsx` wrapping Reports in a standalone layout
+3. Add `/executive` route in `App.tsx`
+4. Update `Header.tsx` with executive nav link
+5. Update `Login.tsx` with executive redirect
 
