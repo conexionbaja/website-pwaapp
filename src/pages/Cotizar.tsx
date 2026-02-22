@@ -91,14 +91,36 @@ const Cotizar = () => {
                   { id: 'name', label: t.name, type: 'text', required: true },
                   { id: 'email', label: t.email, type: 'email', required: true },
                   { id: 'phone', label: t.phone, type: 'tel' },
-                  { id: 'origin', label: t.origin, type: 'text', required: true },
-                  { id: 'destination', label: t.destination, type: 'text', required: true },
-                  { id: 'package_type', label: t.packageType, type: 'text' },
-                  { id: 'weight', label: t.weight, type: 'text' },
                 ].map(({ id, label, type, required }) => (
                   <div key={id} className="space-y-2">
                     <Label htmlFor={id} className="text-foreground">{label}</Label>
                     <Input id={id} type={type} value={(form as any)[id]} onChange={handleChange} required={required} className="bg-background" />
+                  </div>
+                ))}
+                {['origin', 'destination'].map((field) => (
+                  <div key={field} className="space-y-2">
+                    <Label htmlFor={field} className="text-foreground">{field === 'origin' ? t.origin : t.destination}</Label>
+                    <select
+                      id={field}
+                      value={(form as any)[field]}
+                      onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                      required
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="">{language === 'es' ? 'Seleccionar...' : 'Select...'}</option>
+                      {['Tijuana', 'Ensenada', 'San Quintin', 'Guerrero Negro', 'Mulege', 'La Paz', 'Cabo San Lucas'].map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+                {[
+                  { id: 'package_type', label: t.packageType, type: 'text' },
+                  { id: 'weight', label: t.weight, type: 'text' },
+                ].map(({ id, label, type }) => (
+                  <div key={id} className="space-y-2">
+                    <Label htmlFor={id} className="text-foreground">{label}</Label>
+                    <Input id={id} type={type} value={(form as any)[id]} onChange={handleChange} className="bg-background" />
                   </div>
                 ))}
                 <div className="space-y-2">

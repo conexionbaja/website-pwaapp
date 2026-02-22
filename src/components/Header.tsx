@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
-import { Menu, X, Globe, Shield, Truck, BarChart3 } from "lucide-react";
+import { Menu, X, Globe, Shield, Truck, BarChart3, User } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/badge.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -62,6 +62,11 @@ const Header = () => {
                 <NavLink to="/executive"><BarChart3 className="h-4 w-4 mr-1" />Dashboard</NavLink>
               </Button>
             )}
+            {user && !isAdmin && !isDriver && !isExecutive && (
+              <Button variant="ghost" size="sm" asChild>
+                <NavLink to="/portal"><User className="h-4 w-4 mr-1" />{language === 'es' ? 'Mi Portal' : 'My Portal'}</NavLink>
+              </Button>
+            )}
             {user ? (
               <Button variant="ghost" size="sm" onClick={signOut}>{t.header.logout}</Button>
             ) : (
@@ -101,6 +106,11 @@ const Header = () => {
               {isExecutive && (
                 <Button variant="ghost" asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
                   <NavLink to="/executive"><BarChart3 className="h-4 w-4 mr-1" />Dashboard</NavLink>
+                </Button>
+              )}
+              {user && !isAdmin && !isDriver && !isExecutive && (
+                <Button variant="ghost" asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                  <NavLink to="/portal"><User className="h-4 w-4 mr-1" />{language === 'es' ? 'Mi Portal' : 'My Portal'}</NavLink>
                 </Button>
               )}
               {user ? (

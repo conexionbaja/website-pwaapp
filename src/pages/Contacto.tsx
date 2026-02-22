@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Contacto = () => {
@@ -25,8 +26,18 @@ const Contacto = () => {
     emailAddr: 'info@conexionbaja.com',
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.from('contact_messages').insert({
+      name: form.name,
+      email: form.email,
+      message: form.message,
+    });
+    setLoading(false);
+    if (error) { toast.error(error.message); return; }
     toast.success(language === 'es' ? '¡Mensaje enviado!' : 'Message sent!');
     setForm({ name: '', email: '', message: '' });
   };
@@ -53,7 +64,7 @@ const Contacto = () => {
                   <Label className="text-foreground">{t.message}</Label>
                   <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required className="bg-background" rows={5} />
                 </div>
-                <Button type="submit" variant="hero" className="w-full">{t.submit}</Button>
+                <Button type="submit" variant="hero" className="w-full" disabled={loading}>{t.submit}</Button>
               </form>
             </CardContent>
           </Card>
