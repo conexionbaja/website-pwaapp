@@ -92,6 +92,10 @@ const Enviar = () => {
       toast.error(error.message);
       return;
     }
+    // Fire notification (non-blocking)
+    supabase.functions.invoke('send-contact-notification', {
+      body: { type: 'quote', name: formData.name, email: formData.email, message: `${formData.origen} → ${formData.destino}` },
+    }).catch(() => {});
     toast.success(labels.success);
     if (user) {
       navigate("/portal");

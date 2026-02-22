@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
-import { Menu, X, Globe, Shield, Truck, BarChart3, User } from "lucide-react";
+import { Menu, X, Globe, Shield, Truck, BarChart3, User, ClipboardList } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/badge.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
-  const { user, isAdmin, isDriver, isExecutive, signOut } = useAuth();
+  const { user, isAdmin, isDriver, isExecutive, isLogisticsManager, signOut } = useAuth();
 
   const toggleLanguage = () => {
     setLanguage(language === 'es' ? 'en' : 'es');
@@ -62,7 +62,12 @@ const Header = () => {
                 <NavLink to="/executive"><BarChart3 className="h-4 w-4 mr-1" />Dashboard</NavLink>
               </Button>
             )}
-            {user && !isAdmin && !isDriver && !isExecutive && (
+            {isLogisticsManager && (
+              <Button variant="ghost" size="sm" asChild>
+                <NavLink to="/logistics"><ClipboardList className="h-4 w-4 mr-1" />{language === 'es' ? 'Operaciones' : 'Operations'}</NavLink>
+              </Button>
+            )}
+            {user && !isAdmin && !isDriver && !isExecutive && !isLogisticsManager && (
               <Button variant="ghost" size="sm" asChild>
                 <NavLink to="/portal"><User className="h-4 w-4 mr-1" />{language === 'es' ? 'Mi Portal' : 'My Portal'}</NavLink>
               </Button>
@@ -108,7 +113,12 @@ const Header = () => {
                   <NavLink to="/executive"><BarChart3 className="h-4 w-4 mr-1" />Dashboard</NavLink>
                 </Button>
               )}
-              {user && !isAdmin && !isDriver && !isExecutive && (
+              {isLogisticsManager && (
+                <Button variant="ghost" asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                  <NavLink to="/logistics"><ClipboardList className="h-4 w-4 mr-1" />{language === 'es' ? 'Operaciones' : 'Operations'}</NavLink>
+                </Button>
+              )}
+              {user && !isAdmin && !isDriver && !isExecutive && !isLogisticsManager && (
                 <Button variant="ghost" asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
                   <NavLink to="/portal"><User className="h-4 w-4 mr-1" />{language === 'es' ? 'Mi Portal' : 'My Portal'}</NavLink>
                 </Button>

@@ -38,6 +38,10 @@ const Contacto = () => {
     });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
+    // Fire notification (non-blocking)
+    supabase.functions.invoke('send-contact-notification', {
+      body: { type: 'contact', name: form.name, email: form.email, message: form.message },
+    }).catch(() => {});
     toast.success(language === 'es' ? '¡Mensaje enviado!' : 'Message sent!');
     setForm({ name: '', email: '', message: '' });
   };
