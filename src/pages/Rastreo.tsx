@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Package, Clock, Loader2, MapPin, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import PageMeta from "@/components/PageMeta";
 
 const statusSteps = [
   'created', 'assigned', 'picked_up', 'in_transit', 'passed_city',
@@ -76,10 +77,26 @@ const Rastreo = () => {
     setSearching(false);
   };
 
+  // Realtime subscriptions
+  useEffect(() => {
+    if (!shipment) return;
+    const channel = supabase
+      .channel(`tracking-${shipment.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'shipments', filter: `id=eq.${shipment.id}` }, (payload) => {
+        setShipment((prev: any) => ({ ...prev, ...payload.new }));
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shipment_status_log', filter: `shipment_id=eq.${shipment.id}` }, (payload) => {
+        setStatusLogs((prev) => [...prev, payload.new]);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [shipment?.id]);
+
   const currentStep = shipment ? statusSteps.indexOf(shipment.status) : -1;
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title={t.track.title} description={language === 'es' ? 'Rastrea tu envío en tiempo real' : 'Track your shipment in real time'} />
       <Header />
       <div className="container mx-auto px-4 pt-32 pb-20">
         <div className="max-w-2xl mx-auto">

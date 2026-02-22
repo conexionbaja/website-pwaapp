@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import DOMPurify from 'dompurify';
+import PageMeta from '@/components/PageMeta';
 
 const BlogPost = () => {
   const { slug } = useParams();
@@ -22,6 +23,7 @@ const BlogPost = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title={post?.title || 'Blog'} description={post?.short_desc || ''} />
       <Header />
       <div className="container mx-auto px-4 pt-32 pb-20 max-w-3xl">
         {post ? (

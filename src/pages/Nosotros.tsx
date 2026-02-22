@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import DOMPurify from 'dompurify';
+import PageMeta from '@/components/PageMeta';
 
 const Nosotros = () => {
   const { language, t } = useLanguage();
@@ -24,6 +25,7 @@ const Nosotros = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title={page?.title || t.footer.about.title} description={page?.short_desc || ''} />
       <Header />
       <div className="container mx-auto px-4 pt-32 pb-20">
         <h1 className="text-4xl font-bold text-foreground mb-4">{page?.title || t.footer.about.title}</h1>

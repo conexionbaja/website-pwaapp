@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
+import PageMeta from "@/components/PageMeta";
 
 const ROUTE_CITIES = [
   "Tijuana",
@@ -131,6 +132,7 @@ const Enviar = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title={t.send.title} description={language === 'es' ? 'Envía paquetes por toda Baja California' : 'Ship packages across Baja California'} />
       <Header />
 
       <div className="container mx-auto px-4 pt-32 pb-20">

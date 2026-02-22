@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import PageMeta from '@/components/PageMeta';
 
 const Cotizar = () => {
   const { language } = useLanguage();
@@ -80,6 +81,7 @@ const Cotizar = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title={t.title} description={language === 'es' ? 'Solicita una cotización para tu envío' : 'Request a quote for your shipment'} />
       <Header />
       <div className="container mx-auto px-4 pt-32 pb-20">
         <div className="max-w-lg mx-auto">

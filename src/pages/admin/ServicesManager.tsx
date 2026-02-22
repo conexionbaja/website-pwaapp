@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 interface ServiceForm {
   name: string;
@@ -86,7 +87,7 @@ const ServicesManager = () => {
             <div className="space-y-4">
               <div><Label>Name</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
               <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-              <div><Label>Image URL</Label><Input value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} /></div>
+              <ImageUpload value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} label="Image" />
               <div><Label>Price Info</Label><Input value={form.price_info} onChange={e => setForm({ ...form, price_info: e.target.value })} /></div>
               <div className="flex gap-4">
                 <div className="flex-1"><Label>Sort Order</Label><Input type="number" value={form.sort_order} onChange={e => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} /></div>
