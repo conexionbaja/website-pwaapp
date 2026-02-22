@@ -22,6 +22,7 @@ import WhatsAppButton from "./components/WhatsAppButton";
 import NotFound from "./pages/NotFound";
 import DriverPortal from "./pages/DriverPortal";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import LogisticsPortal from "./pages/LogisticsPortal";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
           <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
           <Route path="/driver" element={<RoleRoute allowedRoles={['driver']}><DriverPortal /></RoleRoute>} />
           <Route path="/executive" element={<RoleRoute allowedRoles={['executive']}><ExecutiveDashboard /></RoleRoute>} />
+          <Route path="/logistics" element={<RoleRoute allowedRoles={['logistics_manager']}><LogisticsPortal /></RoleRoute>} />
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>

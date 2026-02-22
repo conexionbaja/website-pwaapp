@@ -61,7 +61,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Conexión Baja Envíos PWA. {t.footer.rights}</p>
+          <p>&copy; {new Date().getFullYear()} Conexión Baja Envíos PWA. {t.footer.rights}</p>
         </div>
       </div>
     </footer>

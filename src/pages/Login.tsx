@@ -26,6 +26,7 @@ const Login = () => {
       if (role === 'admin') navigate('/admin');
       else if (role === 'driver') navigate('/driver');
       else if (role === 'executive') navigate('/executive');
+      else if (role === 'logistics_manager') navigate('/logistics');
       else navigate('/portal');
     }
   }, [user, role, navigate]);
