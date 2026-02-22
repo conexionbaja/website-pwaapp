@@ -9,7 +9,7 @@ interface RoleRouteProps {
 export const RoleRoute: React.FC<RoleRouteProps> = ({ children, allowedRoles = ['admin'] }) => {
   const { user, role, loading } = useAuth();
 
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-foreground">Loading...</div>;
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-foreground">Cargando...</div>;
   if (!user) return <Navigate to="/login" replace />;
   if (!role || !allowedRoles.includes(role)) return <Navigate to="/" replace />;
 

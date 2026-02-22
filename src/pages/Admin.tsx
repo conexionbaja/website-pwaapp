@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { FileText, Newspaper, MessageSquare, Mail, Users, LogOut, Wrench, UserCheck, Truck, Package, Receipt, BarChart3 } from 'lucide-react';
 import PagesEditor from '@/pages/admin/PagesEditor';
 import BlogEditor from '@/pages/admin/BlogEditor';
@@ -16,45 +17,40 @@ import Reports from '@/pages/admin/Reports';
 import ContactMessages from '@/pages/admin/ContactMessages';
 import { Inbox } from 'lucide-react';
 
-const tabs = [
-  { key: 'pages', label: 'Pages', icon: FileText },
-  { key: 'blog', label: 'Blog/News', icon: Newspaper },
-  { key: 'services', label: 'Services', icon: Wrench },
-  { key: 'quotes', label: 'Quote Requests', icon: MessageSquare },
-  { key: 'contacts', label: 'Contact Messages', icon: Inbox },
-  { key: 'shipments', label: 'Shipments', icon: Package },
-  { key: 'drivers', label: 'Drivers', icon: UserCheck },
-  { key: 'trucks', label: 'Trucks', icon: Truck },
-  { key: 'invoices', label: 'Invoices', icon: Receipt },
-  { key: 'reports', label: 'Reports', icon: BarChart3 },
-  { key: 'newsletter', label: 'Newsletter', icon: Mail },
-  { key: 'subscribers', label: 'Subscribers', icon: Users },
-];
-
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('pages');
   const { signOut } = useAuth();
+  const { language } = useLanguage();
+  const es = language === 'es';
+
+  const tabs = [
+    { key: 'pages', label: es ? 'Páginas' : 'Pages', icon: FileText },
+    { key: 'blog', label: es ? 'Blog/Noticias' : 'Blog/News', icon: Newspaper },
+    { key: 'services', label: es ? 'Servicios' : 'Services', icon: Wrench },
+    { key: 'quotes', label: es ? 'Cotizaciones' : 'Quote Requests', icon: MessageSquare },
+    { key: 'contacts', label: es ? 'Mensajes' : 'Contact Messages', icon: Inbox },
+    { key: 'shipments', label: es ? 'Envíos' : 'Shipments', icon: Package },
+    { key: 'drivers', label: es ? 'Choferes' : 'Drivers', icon: UserCheck },
+    { key: 'trucks', label: es ? 'Camiones' : 'Trucks', icon: Truck },
+    { key: 'invoices', label: es ? 'Facturas' : 'Invoices', icon: Receipt },
+    { key: 'reports', label: es ? 'Reportes' : 'Reports', icon: BarChart3 },
+    { key: 'newsletter', label: es ? 'Boletín' : 'Newsletter', icon: Mail },
+    { key: 'subscribers', label: es ? 'Suscriptores' : 'Subscribers', icon: Users },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex">
       <aside className="w-64 bg-card border-r border-border p-4 flex flex-col">
-        <h2 className="text-xl font-bold text-foreground mb-6">Admin CMS</h2>
+        <h2 className="text-xl font-bold text-foreground mb-6">{es ? 'Admin CMS' : 'Admin CMS'}</h2>
         <nav className="flex-1 space-y-1">
           {tabs.map(({ key, label, icon: Icon }) => (
-            <Button
-              key={key}
-              variant={activeTab === key ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab(key)}
-            >
-              <Icon className="h-4 w-4 mr-2" />
-              {label}
+            <Button key={key} variant={activeTab === key ? 'default' : 'ghost'} className="w-full justify-start" onClick={() => setActiveTab(key)}>
+              <Icon className="h-4 w-4 mr-2" />{label}
             </Button>
           ))}
         </nav>
         <Button variant="ghost" className="justify-start text-destructive" onClick={signOut}>
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
+          <LogOut className="h-4 w-4 mr-2" />{es ? 'Cerrar Sesión' : 'Sign Out'}
         </Button>
       </aside>
       <main className="flex-1 p-6 overflow-auto">
