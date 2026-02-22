@@ -1,81 +1,92 @@
 
 
-# Phase E: Shipping Form Integration and User Profile Management
+# Phase F: Contact Form Integration, Quote Form Polish, and Notifications
 
-Wire up the remaining unconnected pages and add user self-service features to complete the customer-facing experience.
-
----
-
-## 1. Enviar Page: Wire to Database (`src/pages/Enviar.tsx`)
-
-The "Send a Package" form currently has a `TODO` and does nothing. Connect it to create real records:
-
-### 1a. For Logged-In Users
-When a logged-in user submits the form:
-- Insert a row into `quote_requests` with the form data (origin, destination, package_type, weight, description) and `user_id = auth.uid()`
-- Show a success message and redirect to `/portal`
-
-### 1b. For Guest Users
-When a guest submits:
-- Insert the same row into `quote_requests` with `user_id = null`
-- Show a success card with "Register or Login to track your request" (same pattern as Cotizar page)
-
-### 1c. Form Enhancements
-- Replace the free-text origin/destination with city selects from the Baja route (Tijuana, Ensenada, San Quintin, Guerrero Negro, Mulege, La Paz, Cabo San Lucas)
-- Add a name and email field for guest users (auto-fill from auth if logged in)
-- Add a free-text "additional details" textarea
+Complete the remaining disconnected pages and add email notification capabilities for form submissions.
 
 ---
 
-## 2. User Profile Page: `/portal` Profile Tab (`src/pages/Portal.tsx`)
+## 1. Contact Messages Table (New Migration)
 
-Add a "Profile" tab to the existing Portal page where users can view and update their information:
+Create a `contact_messages` table to store contact form submissions:
 
-### 2a. Profile Display and Edit
-- Query `profiles` table for the current user
-- Show editable fields: full_name, phone, avatar_url
-- Save button updates the `profiles` table
-- If no profile row exists, auto-create one on first visit using `upsert`
+- `id` (uuid, PK, default gen_random_uuid())
+- `name` (text, NOT NULL)
+- `email` (text, NOT NULL)
+- `message` (text, NOT NULL)
+- `created_at` (timestamptz, default now())
+- `status` (text, default 'unread') -- for admin to track read/replied
 
-### 2b. Password Change
-- Add a "Change Password" section using `supabase.auth.updateUser({ password })`
-- Requires new password + confirmation
-
----
-
-## 3. Notification Preferences (Simple)
-
-Add a checkbox in the Profile tab:
-- "Subscribe to newsletter" -- toggles a row in `newsletter_subscribers` using the user's email
-- Check on load if the user's email is already subscribed
+RLS policies:
+- Anyone can INSERT (public form)
+- Admins can SELECT and UPDATE (to mark as read/replied)
 
 ---
 
-## 4. Enviar Page Route City Selects
+## 2. Contacto Page: Wire to Database (`src/pages/Contacto.tsx`)
 
-Use the same route cities constant defined in ShipmentsManager for consistency:
+Replace the fake toast-only submit handler:
+- Insert a row into `contact_messages` with name, email, message
+- Show a success message after submission
+- Reset the form
 
-```text
-Tijuana, Ensenada, San Quintin, Guerrero Negro, Mulege, La Paz, Cabo San Lucas
-```
+---
+
+## 3. Contact Messages Admin Tab (`src/pages/admin/ContactMessages.tsx`)
+
+New admin tab to view and manage contact submissions:
+- Table listing all contact messages (name, email, message preview, status, date)
+- Click to expand and read full message
+- Mark as "read" or "replied" buttons
+- Add this tab to `Admin.tsx` sidebar
 
 ---
 
-## No Database Changes
+## 4. Cotizar Page: Add City Selects (`src/pages/Cotizar.tsx`)
 
-All tables (`quote_requests`, `profiles`, `newsletter_subscribers`) already exist with the needed columns. No migrations required.
+Align the quote request form with the Enviar page:
+- Replace free-text origin/destination inputs with the same `ROUTE_CITIES` select dropdowns
+- Keep all other fields as-is (name, email, phone, package_type, weight, description already work)
 
 ---
+
+## 5. Header: Add Portal Link for Logged-In Users (`src/components/Header.tsx`)
+
+Currently logged-in regular users only see a "Logout" button. Add:
+- A "My Portal" link visible when the user is logged in and is NOT admin/driver/executive
+- This links to `/portal`
+
+---
+
+## Database Changes
+
+| Change | Type |
+|---|---|
+| Create `contact_messages` table | New migration |
+| RLS: Anyone INSERT, Admins SELECT/UPDATE | Policies in same migration |
+
+---
+
+## Files to Create
+
+| File | Purpose |
+|---|---|
+| `src/pages/admin/ContactMessages.tsx` | Admin view for contact form submissions |
 
 ## Files to Modify
 
 | File | Changes |
 |---|---|
-| `src/pages/Enviar.tsx` | Wire form to `quote_requests` table, add city selects, guest/auth flow |
-| `src/pages/Portal.tsx` | Add "Profile" tab with edit form, password change, newsletter toggle |
+| `src/pages/Contacto.tsx` | Wire form to `contact_messages` table |
+| `src/pages/Cotizar.tsx` | Replace free-text origin/dest with ROUTE_CITIES selects |
+| `src/pages/Admin.tsx` | Add "Contact Messages" tab to sidebar |
+| `src/components/Header.tsx` | Add "My Portal" link for logged-in regular users |
 
 ## Implementation Order
 
-1. Rewrite `Enviar.tsx` -- connect to database with auth-aware logic
-2. Add Profile tab to `Portal.tsx` -- profile editing, password change, newsletter toggle
+1. Create `contact_messages` table migration
+2. Wire `Contacto.tsx` to the new table
+3. Create `ContactMessages.tsx` admin tab and register in `Admin.tsx`
+4. Update `Cotizar.tsx` with city selects
+5. Update `Header.tsx` with portal link
 
