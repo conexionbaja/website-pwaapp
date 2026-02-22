@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import PageMeta from '@/components/PageMeta';
 
 const Servicios = () => {
   const { language } = useLanguage();
@@ -25,6 +26,7 @@ const Servicios = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title={language === 'es' ? 'Nuestros Servicios' : 'Our Services'} description={language === 'es' ? 'Servicios de transporte y logística en Baja California' : 'Transport and logistics services in Baja California'} />
       <Header />
       <div className="container mx-auto px-4 pt-32 pb-20">
         <h1 className="text-4xl font-bold text-foreground mb-8">{language === 'es' ? 'Nuestros Servicios' : 'Our Services'}</h1>

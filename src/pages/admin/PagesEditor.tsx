@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 const PagesEditor = () => {
   const queryClient = useQueryClient();
@@ -57,10 +58,7 @@ const PagesEditor = () => {
               <Label className="text-foreground">Content (HTML)</Label>
               <Textarea value={editing.content} onChange={(e) => setEditing({ ...editing, content: e.target.value })} rows={10} className="bg-background font-mono text-sm" />
             </div>
-            <div className="space-y-2">
-              <Label className="text-foreground">Image URL</Label>
-              <Input value={editing.image_url || ''} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} className="bg-background" />
-            </div>
+            <ImageUpload value={editing.image_url || ''} onChange={(url) => setEditing({ ...editing, image_url: url })} label="Image" />
             <Button variant="hero" onClick={() => updateMutation.mutate(editing)} disabled={updateMutation.isPending}>
               Save Changes
             </Button>

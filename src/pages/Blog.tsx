@@ -5,6 +5,7 @@ import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import PageMeta from '@/components/PageMeta';
 
 const Blog = () => {
   const { language, t } = useLanguage();
@@ -24,6 +25,7 @@ const Blog = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title={language === 'es' ? 'Blog / Noticias' : 'Blog / News'} description={language === 'es' ? 'Noticias y actualizaciones de Conexión Baja' : 'News and updates from Conexión Baja'} />
       <Header />
       <div className="container mx-auto px-4 pt-32 pb-20">
         <h1 className="text-4xl font-bold text-foreground mb-8">{t.header.blog || (language === 'es' ? 'Blog / Noticias' : 'Blog / News')}</h1>

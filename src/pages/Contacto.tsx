@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import PageMeta from '@/components/PageMeta';
 
 const Contacto = () => {
   const { language } = useLanguage();
@@ -48,6 +49,7 @@ const Contacto = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title={t.title} description={language === 'es' ? 'Contáctanos para cotizaciones y servicios de transporte' : 'Contact us for quotes and transport services'} />
       <Header />
       <div className="container mx-auto px-4 pt-32 pb-20">
         <h1 className="text-4xl font-bold text-foreground mb-8">{t.title}</h1>

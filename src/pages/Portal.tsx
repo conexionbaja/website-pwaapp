@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import PageMeta from '@/components/PageMeta';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-500/20 text-yellow-400',
@@ -149,6 +150,21 @@ const Portal = () => {
     if (newsletterSub) setNewsletterChecked(newsletterSub.active);
   }, [newsletterSub]);
 
+  // Realtime subscription for shipments
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`portal-shipments-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shipments', filter: `user_id=eq.${user.id}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ['portal_shipments'] });
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shipment_status_log' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['portal_status_log'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, queryClient]);
+
   const profileMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('profiles').upsert({
@@ -199,6 +215,7 @@ const Portal = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title={t.title} description={language === 'es' ? 'Gestiona tus envíos, cotizaciones y facturas' : 'Manage your shipments, quotes and invoices'} />
       <Header />
       <div className="container mx-auto px-4 pt-32 pb-20">
         <h1 className="text-3xl font-bold text-foreground mb-8">{t.title}</h1>

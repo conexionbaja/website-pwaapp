@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus } from 'lucide-react';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 const emptyPost = { title: '', slug: '', short_desc: '', content: '', image_url: '', language: 'es', published: false };
 
@@ -69,13 +70,13 @@ const BlogEditor = () => {
               { key: 'title', label: 'Title' },
               { key: 'slug', label: 'Slug' },
               { key: 'short_desc', label: 'Short Description' },
-              { key: 'image_url', label: 'Image URL' },
             ].map(({ key, label }) => (
               <div key={key} className="space-y-2">
                 <Label className="text-foreground">{label}</Label>
                 <Input value={editing[key] || ''} onChange={(e) => setEditing({ ...editing, [key]: e.target.value })} className="bg-background" />
               </div>
             ))}
+            <ImageUpload value={editing.image_url || ''} onChange={(url) => setEditing({ ...editing, image_url: url })} label="Image" />
             <div className="space-y-2">
               <Label className="text-foreground">Language</Label>
               <select value={editing.language} onChange={(e) => setEditing({ ...editing, language: e.target.value })} className="w-full rounded-md border border-border bg-background text-foreground p-2">
