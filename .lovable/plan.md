@@ -1,57 +1,73 @@
 
 
-# Phase G: Logistics Manager Role, Email Notifications, and PWA Enhancements
+# Phase H: Homepage CMS, SEO, Image Uploads, and Realtime Tracking
 
-Introduce the logistics_manager role (already defined in AuthContext but without a dedicated portal), add real email notifications for form submissions, and polish the PWA experience.
-
----
-
-## 1. Logistics Manager Portal (`src/pages/LogisticsPortal.tsx`)
-
-The `logistics_manager` role already exists in AuthContext and has RLS policies on shipments, pallets, trucks, drivers, and status logs. But there is no dedicated page. Create one:
-
-- Tabbed layout with Header/Footer (same pattern as DriverPortal/ExecutiveDashboard)
-- **Shipments Tab**: View all shipments, update status, add status log entries (reuse ShipmentsManager patterns but scoped to logistics operations -- no delete)
-- **Trucks Tab**: View truck fleet with status and assigned drivers (read-only)
-- **Drivers Tab**: View driver availability (read-only)
-
-This avoids giving logistics managers full admin access while letting them manage day-to-day operations.
+Polish the application with CMS-driven homepage content, proper SEO meta tags, image upload support for the admin CMS, and realtime shipment tracking updates.
 
 ---
 
-## 2. Routing and Navigation for Logistics Manager
+## 1. Homepage CMS Integration (`src/pages/Index.tsx`)
 
-- Add `/logistics` route in `App.tsx` protected by `RoleRoute` with `allowedRoles={['logistics_manager']}`
-- Add "Operations" link in `Header.tsx` for `logistics_manager` role (both desktop and mobile)
-- Update `Login.tsx` redirect: `logistics_manager` role goes to `/logistics`
+Deferred from Phase G. The homepage currently uses only hardcoded translation strings. Enhance it to optionally pull from the `cms_pages` table:
 
----
-
-## 3. Email Notification Edge Function (`supabase/functions/send-contact-notification/index.ts`)
-
-Create a backend function that sends an email notification when a contact form or quote request is submitted:
-
-- Accepts `{ type: 'contact' | 'quote', name, email, message? }` payload
-- Uses the Lovable AI endpoint or a simple webhook to notify the admin
-- For now, logs the notification (can be wired to a real email service later)
-- Called from `Contacto.tsx` and `Enviar.tsx` after successful database insert
+- Query `cms_pages` for `slug='home'` with section keys: `hero`, `how_it_works`, `why_choose`, `cta`
+- If CMS data exists for the current language, use its `title`, `short_desc`, and `content` fields
+- Otherwise fall back to existing translation strings (zero visual change if no CMS rows exist)
+- This lets admins customize homepage copy from the Pages tab without code changes
 
 ---
 
-## 4. Homepage: Dynamic CMS Sections (`src/pages/Index.tsx`)
+## 2. SEO Meta Tags (`src/components/PageMeta.tsx`)
 
-The homepage currently uses only hardcoded translation strings. Enhance it to optionally pull from the CMS:
+Create a reusable component that sets `<title>` and `<meta name="description">` per page using `react-helmet-async` (or a simple `useEffect` on `document.title`):
 
-- Query `cms_pages` for `slug='home'` sections (e.g., `section_key='hero'`, `section_key='why_choose'`)
-- If CMS data exists, use it; otherwise fall back to translation strings
-- This lets admins customize homepage copy without code changes
+- New `PageMeta` component accepting `title` and `description` props
+- Add it to every public page: Index, Servicios, Enviar, Rastreo, Blog, BlogPost, Cotizar, Contacto, Nosotros
+- BlogPost page pulls title/description from the post data dynamically
+- Default title format: `{Page Title} | Conexion Baja`
+
+No new dependency needed -- use a simple `useEffect` to set `document.title` and create/update a meta description tag directly.
 
 ---
 
-## 5. Footer: Update Copyright Year and Social Links
+## 3. Image Upload for Admin CMS
 
-- Change `2024` to dynamic year (`new Date().getFullYear()`)
-- Make social media links configurable via CMS (query `cms_pages` with `slug='footer'`, `section_key='social'`)
+Currently, admins must paste image URLs manually for blog posts, services, and CMS pages. Add file upload support using Lovable Cloud storage:
+
+### 3a. Storage Bucket
+- Create a `public-images` storage bucket (public, with size limit)
+- RLS: admins can upload/delete; anyone can read
+
+### 3b. Image Upload Component (`src/components/admin/ImageUpload.tsx`)
+- Drag-and-drop or click-to-upload component
+- Uploads to `public-images` bucket, returns the public URL
+- Shows preview of current/uploaded image
+- Reusable across BlogEditor, ServicesManager, and PagesEditor
+
+### 3c. Wire into Admin Pages
+- Replace the plain `image_url` text input with the ImageUpload component in:
+  - `BlogEditor.tsx`
+  - `ServicesManager.tsx`
+  - `PagesEditor.tsx`
+
+---
+
+## 4. Realtime Tracking Updates (`src/pages/Rastreo.tsx`)
+
+Currently, the tracking page shows a static snapshot. Add realtime updates so customers see status changes live:
+
+- After a shipment is found, subscribe to `postgres_changes` on `shipments` table filtered by the shipment ID
+- Also subscribe to `shipment_status_log` inserts for that shipment
+- Auto-update the timeline and status badge when new data arrives
+- Show a subtle "Updated just now" indicator
+- Unsubscribe on component unmount or new search
+- Enable realtime on `shipments` and `shipment_status_log` tables via migration
+
+---
+
+## 5. Portal Realtime Updates (`src/pages/Portal.tsx`)
+
+Same pattern as tracking -- subscribe to changes on the user's shipments so the portal reflects live status without refreshing.
 
 ---
 
@@ -59,7 +75,10 @@ The homepage currently uses only hardcoded translation strings. Enhance it to op
 
 | Change | Type |
 |---|---|
-| None -- all tables and RLS policies already exist for logistics_manager | No migration needed |
+| Enable realtime on `shipments` table | Migration |
+| Enable realtime on `shipment_status_log` table | Migration |
+| Create `public-images` storage bucket | Migration |
+| Storage RLS: public read, admin upload/delete | Migration |
 
 ---
 
@@ -67,25 +86,27 @@ The homepage currently uses only hardcoded translation strings. Enhance it to op
 
 | File | Purpose |
 |---|---|
-| `src/pages/LogisticsPortal.tsx` | Logistics manager operations portal |
-| `supabase/functions/send-contact-notification/index.ts` | Email notification for form submissions |
+| `src/components/PageMeta.tsx` | Reusable SEO meta tag component |
+| `src/components/admin/ImageUpload.tsx` | Drag-and-drop image upload for admin |
 
 ## Files to Modify
 
 | File | Changes |
 |---|---|
-| `src/App.tsx` | Add `/logistics` route with RoleRoute guard |
-| `src/components/Header.tsx` | Add "Operations" nav link for logistics_manager role |
-| `src/pages/Login.tsx` | Add logistics_manager redirect to `/logistics` |
-| `src/pages/Index.tsx` | Pull optional CMS content for homepage sections |
-| `src/components/Footer.tsx` | Dynamic copyright year |
+| `src/pages/Index.tsx` | Query CMS for homepage sections, fall back to translations |
+| `src/pages/Rastreo.tsx` | Add realtime subscription for live tracking |
+| `src/pages/Portal.tsx` | Add realtime subscription for shipment updates |
+| `src/pages/admin/BlogEditor.tsx` | Replace image_url input with ImageUpload |
+| `src/pages/admin/ServicesManager.tsx` | Replace image_url input with ImageUpload |
+| `src/pages/admin/PagesEditor.tsx` | Replace image_url input with ImageUpload |
+| All public pages | Add PageMeta component for SEO |
 
 ## Implementation Order
 
-1. Create `LogisticsPortal.tsx` with shipments, trucks, and drivers tabs
-2. Add `/logistics` route in `App.tsx` and update `Header.tsx` + `Login.tsx`
-3. Create `send-contact-notification` edge function
-4. Wire notification calls from `Contacto.tsx` and `Enviar.tsx`
-5. Enhance `Index.tsx` with optional CMS content
-6. Update `Footer.tsx` copyright year
+1. Create `PageMeta` component and add to all public pages
+2. Create storage bucket and ImageUpload component
+3. Wire ImageUpload into BlogEditor, ServicesManager, PagesEditor
+4. Enable realtime on shipments/status_log tables
+5. Add realtime subscriptions to Rastreo and Portal
+6. Integrate CMS content into Index.tsx homepage
 
