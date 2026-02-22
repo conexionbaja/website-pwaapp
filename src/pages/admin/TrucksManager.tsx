@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Plus, Pencil, Trash2, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -37,9 +38,24 @@ const empty: TruckForm = {
 
 const TrucksManager = () => {
   const qc = useQueryClient();
+  const { language } = useLanguage();
+  const es = language === 'es';
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<TruckForm>(empty);
+
+  const vehicleTypeLabels: Record<string, string> = {
+    truck: es ? 'Camión' : 'Truck',
+    half_box_trailer: es ? 'Caja Seca Media' : 'Half Box Trailer',
+    full_box_trailer: es ? 'Caja Seca Completa' : 'Full Box Trailer',
+  };
+
+  const truckStatusLabels: Record<string, string> = {
+    available: es ? 'Disponible' : 'Available',
+    in_transit: es ? 'En Tránsito' : 'In Transit',
+    maintenance: es ? 'Mantenimiento' : 'Maintenance',
+    inactive: es ? 'Inactivo' : 'Inactive',
+  };
 
   const { data: trucks } = useQuery({
     queryKey: ['admin_trucks'],
@@ -64,13 +80,13 @@ const TrucksManager = () => {
       if (editing) { const { error } = await supabase.from('trucks').update(payload).eq('id', editing); if (error) throw error; }
       else { const { error } = await supabase.from('trucks').insert(payload); if (error) throw error; }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_trucks'] }); toast.success('Saved'); setOpen(false); setEditing(null); setForm(empty); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_trucks'] }); toast.success(es ? 'Guardado' : 'Saved'); setOpen(false); setEditing(null); setForm(empty); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const del = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('trucks').delete().eq('id', id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_trucks'] }); toast.success('Deleted'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_trucks'] }); toast.success(es ? 'Eliminado' : 'Deleted'); },
   });
 
   const toggleActive = useMutation({
@@ -93,46 +109,46 @@ const TrucksManager = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Trucks</h1>
+        <h1 className="text-2xl font-bold text-foreground">{es ? 'Camiones' : 'Trucks'}</h1>
         <Dialog open={open} onOpenChange={o => { setOpen(o); if (!o) { setEditing(null); setForm(empty); } }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Add Truck</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{es ? 'Agregar Camión' : 'Add Truck'}</Button></DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>{editing ? 'Edit Truck' : 'New Truck'}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editing ? (es ? 'Editar Camión' : 'Edit Truck') : (es ? 'Nuevo Camión' : 'New Truck')}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div><Label>Plate Number</Label><Input value={form.plate_number} onChange={e => setForm({ ...form, plate_number: e.target.value })} /></div>
-              <div><Label>VIN</Label><Input value={form.vin} onChange={e => setForm({ ...form, vin: e.target.value })} placeholder="Vehicle ID Number" /></div>
-              <div><Label>Vehicle Type</Label>
+              <div><Label>{es ? 'Número de Placa' : 'Plate Number'}</Label><Input value={form.plate_number} onChange={e => setForm({ ...form, plate_number: e.target.value })} /></div>
+              <div><Label>VIN</Label><Input value={form.vin} onChange={e => setForm({ ...form, vin: e.target.value })} placeholder={es ? 'Número de Identificación Vehicular' : 'Vehicle ID Number'} /></div>
+              <div><Label>{es ? 'Tipo de Vehículo' : 'Vehicle Type'}</Label>
                 <Select value={form.vehicle_type} onValueChange={v => setForm({ ...form, vehicle_type: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{vehicleTypes.map(vt => <SelectItem key={vt} value={vt}>{vt.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+                  <SelectContent>{vehicleTypes.map(vt => <SelectItem key={vt} value={vt}>{vehicleTypeLabels[vt]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Model</Label><Input value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} /></div>
+              <div><Label>{es ? 'Modelo' : 'Model'}</Label><Input value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} /></div>
               <div className="flex gap-4">
-                <div className="flex-1"><Label>Capacity (kg)</Label><Input type="number" value={form.capacity_kg} onChange={e => setForm({ ...form, capacity_kg: e.target.value })} /></div>
-                <div className="flex-1"><Label>Capacity (pallets)</Label><Input type="number" value={form.capacity_pallets} onChange={e => setForm({ ...form, capacity_pallets: e.target.value })} /></div>
+                <div className="flex-1"><Label>{es ? 'Capacidad (kg)' : 'Capacity (kg)'}</Label><Input type="number" value={form.capacity_kg} onChange={e => setForm({ ...form, capacity_kg: e.target.value })} /></div>
+                <div className="flex-1"><Label>{es ? 'Capacidad (tarimas)' : 'Capacity (pallets)'}</Label><Input type="number" value={form.capacity_pallets} onChange={e => setForm({ ...form, capacity_pallets: e.target.value })} /></div>
               </div>
-              <div><Label>Status</Label>
+              <div><Label>{es ? 'Estado' : 'Status'}</Label>
                 <Select value={form.current_status} onValueChange={v => setForm({ ...form, current_status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{truckStatuses.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+                  <SelectContent>{truckStatuses.map(s => <SelectItem key={s} value={s}>{truckStatusLabels[s]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Assigned Driver</Label>
+              <div><Label>{es ? 'Conductor Asignado' : 'Assigned Driver'}</Label>
                 <Select value={form.assigned_driver_id} onValueChange={v => setForm({ ...form, assigned_driver_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={es ? 'Ninguno' : 'None'} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="">{es ? 'Ninguno' : 'None'}</SelectItem>
                     {drivers?.map((d: any) => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Last Maintenance Date</Label>
+              <div><Label>{es ? 'Último Mantenimiento' : 'Last Maintenance Date'}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !form.last_maintenance_date && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {form.last_maintenance_date ? format(form.last_maintenance_date, 'PPP') : 'Pick a date'}
+                      {form.last_maintenance_date ? format(form.last_maintenance_date, 'PPP') : (es ? 'Seleccionar fecha' : 'Pick a date')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -140,7 +156,7 @@ const TrucksManager = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-              <Button className="w-full" onClick={() => upsert.mutate()}>{editing ? 'Update' : 'Create'}</Button>
+              <Button className="w-full" onClick={() => upsert.mutate()}>{editing ? (es ? 'Actualizar' : 'Update') : (es ? 'Crear' : 'Create')}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -148,18 +164,18 @@ const TrucksManager = () => {
       <div className="overflow-x-auto">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Plate</TableHead><TableHead>VIN</TableHead><TableHead>Type</TableHead><TableHead>Model</TableHead>
-            <TableHead>Capacity</TableHead><TableHead>Status</TableHead><TableHead>Driver</TableHead><TableHead>Active</TableHead><TableHead>Actions</TableHead>
+            <TableHead>{es ? 'Placa' : 'Plate'}</TableHead><TableHead>VIN</TableHead><TableHead>{es ? 'Tipo' : 'Type'}</TableHead><TableHead>{es ? 'Modelo' : 'Model'}</TableHead>
+            <TableHead>{es ? 'Capacidad' : 'Capacity'}</TableHead><TableHead>{es ? 'Estado' : 'Status'}</TableHead><TableHead>{es ? 'Conductor' : 'Driver'}</TableHead><TableHead>{es ? 'Activo' : 'Active'}</TableHead><TableHead>{es ? 'Acciones' : 'Actions'}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {trucks?.map((t: any) => (
               <TableRow key={t.id}>
                 <TableCell className="text-foreground font-medium">{t.plate_number}</TableCell>
                 <TableCell className="text-muted-foreground text-xs font-mono">{t.vin || '—'}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{t.vehicle_type?.replace(/_/g, ' ')}</TableCell>
+                <TableCell className="text-muted-foreground text-sm">{vehicleTypeLabels[t.vehicle_type] || t.vehicle_type?.replace(/_/g, ' ')}</TableCell>
                 <TableCell className="text-muted-foreground">{t.model}</TableCell>
                 <TableCell className="text-muted-foreground text-sm">{t.capacity_kg ? `${t.capacity_kg}kg` : ''}{t.capacity_pallets ? ` / ${t.capacity_pallets}p` : ''}</TableCell>
-                <TableCell><span className={`px-2 py-1 rounded text-xs ${statusColors[t.current_status] || ''}`}>{t.current_status?.replace(/_/g, ' ')}</span></TableCell>
+                <TableCell><span className={`px-2 py-1 rounded text-xs ${statusColors[t.current_status] || ''}`}>{truckStatusLabels[t.current_status] || t.current_status?.replace(/_/g, ' ')}</span></TableCell>
                 <TableCell className="text-muted-foreground">{t.drivers?.full_name || '—'}</TableCell>
                 <TableCell><Switch checked={t.active} onCheckedChange={v => toggleActive.mutate({ id: t.id, active: v })} /></TableCell>
                 <TableCell className="flex gap-1">

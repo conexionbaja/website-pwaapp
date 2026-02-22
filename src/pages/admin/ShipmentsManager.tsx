@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +35,6 @@ const statusColors: Record<string, string> = {
   delayed_custom: 'bg-yellow-500/20 text-yellow-400',
   on_time: 'bg-emerald-500/20 text-emerald-400',
   cancelled: 'bg-red-500/20 text-red-400',
-  // legacy
   pending: 'bg-yellow-500/20 text-yellow-400',
   loading: 'bg-orange-500/20 text-orange-400',
 };
@@ -63,6 +63,8 @@ const emptyPallet: PalletForm = {
 const ShipmentsManager = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const es = language === 'es';
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<ShipmentForm>(empty);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -110,7 +112,7 @@ const ShipmentsManager = () => {
       const { error } = await supabase.from('shipments').insert(payload);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_shipments'] }); toast.success('Shipment created'); setOpen(false); setForm(empty); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_shipments'] }); toast.success(es ? 'Envío creado' : 'Shipment created'); setOpen(false); setForm(empty); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -118,13 +120,12 @@ const ShipmentsManager = () => {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase.from('shipments').update({ status }).eq('id', id);
       if (error) throw error;
-      // Log the status change
       await supabase.from('shipment_status_log').insert({ shipment_id: id, status, changed_by: user?.id || null });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin_shipments'] });
       qc.invalidateQueries({ queryKey: ['admin_status_log'] });
-      toast.success('Status updated');
+      toast.success(es ? 'Estado actualizado' : 'Status updated');
     },
   });
 
@@ -144,12 +145,12 @@ const ShipmentsManager = () => {
       });
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_pallets', expanded] }); toast.success('Pallet added'); setPalletForm(emptyPallet); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_pallets', expanded] }); toast.success(es ? 'Tarima agregada' : 'Pallet added'); setPalletForm(emptyPallet); },
   });
 
   const delPallet = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('shipment_pallets').delete().eq('id', id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_pallets', expanded] }); toast.success('Pallet removed'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_pallets', expanded] }); toast.success(es ? 'Tarima eliminada' : 'Pallet removed'); },
   });
 
   const autoSort = useMutation({
@@ -158,7 +159,7 @@ const ShipmentsManager = () => {
       const sorted = [...pallets].sort((a, b) => {
         const aIdx = routeOrder[a.destination_city || ''] ?? -1;
         const bIdx = routeOrder[b.destination_city || ''] ?? -1;
-        return bIdx - aIdx; // farthest first (innermost position)
+        return bIdx - aIdx;
       });
       for (let i = 0; i < sorted.length; i++) {
         if (sorted[i].position !== i) {
@@ -166,7 +167,7 @@ const ShipmentsManager = () => {
         }
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_pallets', expanded] }); toast.success('Pallets sorted by route'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_pallets', expanded] }); toast.success(es ? 'Tarimas ordenadas por ruta' : 'Pallets sorted by route'); },
   });
 
   const toggleExpand = (id: string) => {
@@ -177,32 +178,32 @@ const ShipmentsManager = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Shipments</h1>
+        <h1 className="text-2xl font-bold text-foreground">{es ? 'Envíos' : 'Shipments'}</h1>
         <Dialog open={open} onOpenChange={o => { setOpen(o); if (!o) setForm(empty); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />New Shipment</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{es ? 'Nuevo Envío' : 'New Shipment'}</Button></DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Create Shipment</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{es ? 'Crear Envío' : 'Create Shipment'}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div><Label>Origin</Label><Input value={form.origin} onChange={e => setForm({ ...form, origin: e.target.value })} /></div>
-              <div><Label>Destination</Label><Input value={form.destination} onChange={e => setForm({ ...form, destination: e.target.value })} /></div>
-              <div><Label>Driver</Label>
+              <div><Label>{es ? 'Origen' : 'Origin'}</Label><Input value={form.origin} onChange={e => setForm({ ...form, origin: e.target.value })} /></div>
+              <div><Label>{es ? 'Destino' : 'Destination'}</Label><Input value={form.destination} onChange={e => setForm({ ...form, destination: e.target.value })} /></div>
+              <div><Label>{es ? 'Conductor' : 'Driver'}</Label>
                 <Select value={form.driver_id} onValueChange={v => setForm({ ...form, driver_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Select driver" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={es ? 'Seleccionar conductor' : 'Select driver'} /></SelectTrigger>
                   <SelectContent>{drivers?.map((d: any) => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Truck</Label>
+              <div><Label>{es ? 'Camión' : 'Truck'}</Label>
                 <Select value={form.truck_id} onValueChange={v => setForm({ ...form, truck_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Select truck" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={es ? 'Seleccionar camión' : 'Select truck'} /></SelectTrigger>
                   <SelectContent>{trucks?.map((t: any) => <SelectItem key={t.id} value={t.id}>{t.plate_number}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Estimated Delivery</Label>
+              <div><Label>{es ? 'Entrega Estimada' : 'Estimated Delivery'}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !form.estimated_delivery_at && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {form.estimated_delivery_at ? format(form.estimated_delivery_at, 'PPP') : 'Pick a date'}
+                      {form.estimated_delivery_at ? format(form.estimated_delivery_at, 'PPP') : (es ? 'Seleccionar fecha' : 'Pick a date')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -210,9 +211,9 @@ const ShipmentsManager = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-              <div><Label>Current Location</Label><Input value={form.current_location} onChange={e => setForm({ ...form, current_location: e.target.value })} placeholder="Optional" /></div>
-              <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-              <Button className="w-full" onClick={() => create.mutate()}>Create</Button>
+              <div><Label>{es ? 'Ubicación Actual' : 'Current Location'}</Label><Input value={form.current_location} onChange={e => setForm({ ...form, current_location: e.target.value })} placeholder={es ? 'Opcional' : 'Optional'} /></div>
+              <div><Label>{es ? 'Notas' : 'Notes'}</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+              <Button className="w-full" onClick={() => create.mutate()}>{es ? 'Crear' : 'Create'}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -223,13 +224,13 @@ const ShipmentsManager = () => {
           <TableHeader>
             <TableRow>
               <TableHead></TableHead>
-              <TableHead>Tracking #</TableHead>
-              <TableHead>Origin → Dest</TableHead>
-              <TableHead>Driver</TableHead>
-              <TableHead>Truck</TableHead>
+              <TableHead>{es ? 'Rastreo #' : 'Tracking #'}</TableHead>
+              <TableHead>{es ? 'Origen → Dest' : 'Origin → Dest'}</TableHead>
+              <TableHead>{es ? 'Conductor' : 'Driver'}</TableHead>
+              <TableHead>{es ? 'Camión' : 'Truck'}</TableHead>
               <TableHead>ETA</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{es ? 'Estado' : 'Status'}</TableHead>
+              <TableHead>{es ? 'Acciones' : 'Actions'}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -258,24 +259,22 @@ const ShipmentsManager = () => {
                   <TableRow key={`${s.id}-details`}>
                     <TableCell colSpan={8}>
                       <div className="bg-muted/30 rounded-lg p-4 space-y-4">
-                        {/* Info row */}
                         {(s.current_location || s.delay_reason) && (
                           <div className="flex gap-4 text-sm">
-                            {s.current_location && <p className="text-muted-foreground">📍 Location: <span className="text-foreground">{s.current_location}</span></p>}
-                            {s.delay_reason && <p className="text-muted-foreground">⚠️ Delay: <span className="text-foreground">{s.delay_reason}</span></p>}
+                            {s.current_location && <p className="text-muted-foreground">📍 {es ? 'Ubicación' : 'Location'}: <span className="text-foreground">{s.current_location}</span></p>}
+                            {s.delay_reason && <p className="text-muted-foreground">⚠️ {es ? 'Retraso' : 'Delay'}: <span className="text-foreground">{s.delay_reason}</span></p>}
                           </div>
                         )}
 
-                        {/* Pallets */}
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-semibold text-foreground flex items-center gap-2"><Package className="h-4 w-4" />Pallets / Bytarimas</h3>
+                            <h3 className="font-semibold text-foreground flex items-center gap-2"><Package className="h-4 w-4" />{es ? 'Tarimas / Pallets' : 'Pallets / Bytarimas'}</h3>
                             <div className="flex gap-2">
                               <Button size="sm" variant="outline" onClick={() => autoSort.mutate()} disabled={!pallets?.length}>
-                                <ArrowUpDown className="h-3 w-3 mr-1" />Auto-Sort
+                                <ArrowUpDown className="h-3 w-3 mr-1" />{es ? 'Auto-Ordenar' : 'Auto-Sort'}
                               </Button>
                               <Button size="sm" variant="outline" onClick={() => setShowHistory(showHistory === s.id ? null : s.id)}>
-                                <History className="h-3 w-3 mr-1" />History
+                                <History className="h-3 w-3 mr-1" />{es ? 'Historial' : 'History'}
                               </Button>
                             </div>
                           </div>
@@ -294,54 +293,52 @@ const ShipmentsManager = () => {
                                 </Button>
                               </div>
                             ))}
-                            {(!pallets || pallets.length === 0) && <p className="text-muted-foreground text-sm col-span-full">No pallets yet</p>}
+                            {(!pallets || pallets.length === 0) && <p className="text-muted-foreground text-sm col-span-full">{es ? 'Sin tarimas aún' : 'No pallets yet'}</p>}
                           </div>
 
-                          {/* Add pallet form */}
                           <div className="border border-border rounded p-3 space-y-2">
-                            <p className="text-sm font-medium text-foreground">Add Pallet</p>
+                            <p className="text-sm font-medium text-foreground">{es ? 'Agregar Tarima' : 'Add Pallet'}</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                              <div><Label className="text-xs">Description</Label><Input value={palletForm.description} onChange={e => setPalletForm({ ...palletForm, description: e.target.value })} className="h-8 text-sm" /></div>
-                              <div><Label className="text-xs">Load Type</Label>
+                              <div><Label className="text-xs">{es ? 'Descripción' : 'Description'}</Label><Input value={palletForm.description} onChange={e => setPalletForm({ ...palletForm, description: e.target.value })} className="h-8 text-sm" /></div>
+                              <div><Label className="text-xs">{es ? 'Tipo de Carga' : 'Load Type'}</Label>
                                 <Select value={palletForm.load_type} onValueChange={v => setPalletForm({ ...palletForm, load_type: v })}>
                                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                                   <SelectContent>{loadTypes.map(lt => <SelectItem key={lt} value={lt}>{lt}</SelectItem>)}</SelectContent>
                                 </Select>
                               </div>
-                              <div><Label className="text-xs">Origin City</Label>
+                              <div><Label className="text-xs">{es ? 'Ciudad Origen' : 'Origin City'}</Label>
                                 <Select value={palletForm.origin_city} onValueChange={v => setPalletForm({ ...palletForm, origin_city: v })}>
-                                  <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select" /></SelectTrigger>
+                                  <SelectTrigger className="h-8 text-sm"><SelectValue placeholder={es ? 'Seleccionar' : 'Select'} /></SelectTrigger>
                                   <SelectContent>{routeCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                                 </Select>
                               </div>
-                              <div><Label className="text-xs">Destination City</Label>
+                              <div><Label className="text-xs">{es ? 'Ciudad Destino' : 'Destination City'}</Label>
                                 <Select value={palletForm.destination_city} onValueChange={v => setPalletForm({ ...palletForm, destination_city: v })}>
-                                  <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select" /></SelectTrigger>
+                                  <SelectTrigger className="h-8 text-sm"><SelectValue placeholder={es ? 'Seleccionar' : 'Select'} /></SelectTrigger>
                                   <SelectContent>{routeCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                                 </Select>
                               </div>
-                              <div><Label className="text-xs">Client Name</Label><Input value={palletForm.client_name} onChange={e => setPalletForm({ ...palletForm, client_name: e.target.value })} className="h-8 text-sm" /></div>
-                              <div><Label className="text-xs">Weight (kg)</Label><Input type="number" value={palletForm.weight_kg} onChange={e => setPalletForm({ ...palletForm, weight_kg: e.target.value })} className="h-8 text-sm" /></div>
-                              <div><Label className="text-xs">Dimensions</Label><Input value={palletForm.dimensions} onChange={e => setPalletForm({ ...palletForm, dimensions: e.target.value })} className="h-8 text-sm" placeholder="LxWxH" /></div>
-                              <div><Label className="text-xs">Cost</Label><Input type="number" value={palletForm.cost} onChange={e => setPalletForm({ ...palletForm, cost: e.target.value })} className="h-8 text-sm" /></div>
-                              <div><Label className="text-xs">Payment Status</Label>
+                              <div><Label className="text-xs">{es ? 'Nombre del Cliente' : 'Client Name'}</Label><Input value={palletForm.client_name} onChange={e => setPalletForm({ ...palletForm, client_name: e.target.value })} className="h-8 text-sm" /></div>
+                              <div><Label className="text-xs">{es ? 'Peso (kg)' : 'Weight (kg)'}</Label><Input type="number" value={palletForm.weight_kg} onChange={e => setPalletForm({ ...palletForm, weight_kg: e.target.value })} className="h-8 text-sm" /></div>
+                              <div><Label className="text-xs">{es ? 'Dimensiones' : 'Dimensions'}</Label><Input value={palletForm.dimensions} onChange={e => setPalletForm({ ...palletForm, dimensions: e.target.value })} className="h-8 text-sm" placeholder="LxWxH" /></div>
+                              <div><Label className="text-xs">{es ? 'Costo' : 'Cost'}</Label><Input type="number" value={palletForm.cost} onChange={e => setPalletForm({ ...palletForm, cost: e.target.value })} className="h-8 text-sm" /></div>
+                              <div><Label className="text-xs">{es ? 'Estado de Pago' : 'Payment Status'}</Label>
                                 <Select value={palletForm.payment_status} onValueChange={v => setPalletForm({ ...palletForm, payment_status: v })}>
                                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                                   <SelectContent>{paymentStatuses.map(ps => <SelectItem key={ps} value={ps}>{ps}</SelectItem>)}</SelectContent>
                                 </Select>
                               </div>
-                              <div><Label className="text-xs">Delivery Address</Label><Input value={palletForm.delivery_address} onChange={e => setPalletForm({ ...palletForm, delivery_address: e.target.value })} className="h-8 text-sm" /></div>
-                              <div><Label className="text-xs">Delivery Contact</Label><Input value={palletForm.delivery_contact} onChange={e => setPalletForm({ ...palletForm, delivery_contact: e.target.value })} className="h-8 text-sm" /></div>
-                              <div><Label className="text-xs">Special Handling</Label><Input value={palletForm.special_handling} onChange={e => setPalletForm({ ...palletForm, special_handling: e.target.value })} className="h-8 text-sm" /></div>
+                              <div><Label className="text-xs">{es ? 'Dirección de Entrega' : 'Delivery Address'}</Label><Input value={palletForm.delivery_address} onChange={e => setPalletForm({ ...palletForm, delivery_address: e.target.value })} className="h-8 text-sm" /></div>
+                              <div><Label className="text-xs">{es ? 'Contacto de Entrega' : 'Delivery Contact'}</Label><Input value={palletForm.delivery_contact} onChange={e => setPalletForm({ ...palletForm, delivery_contact: e.target.value })} className="h-8 text-sm" /></div>
+                              <div><Label className="text-xs">{es ? 'Manejo Especial' : 'Special Handling'}</Label><Input value={palletForm.special_handling} onChange={e => setPalletForm({ ...palletForm, special_handling: e.target.value })} className="h-8 text-sm" /></div>
                             </div>
-                            <Button size="sm" onClick={() => addPallet.mutate()} disabled={!palletForm.description}><Plus className="h-3 w-3 mr-1" />Add</Button>
+                            <Button size="sm" onClick={() => addPallet.mutate()} disabled={!palletForm.description}><Plus className="h-3 w-3 mr-1" />{es ? 'Agregar' : 'Add'}</Button>
                           </div>
                         </div>
 
-                        {/* Status History */}
                         {showHistory === s.id && (
                           <div className="border-t border-border pt-4">
-                            <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2"><History className="h-4 w-4" />Status History</h4>
+                            <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2"><History className="h-4 w-4" />{es ? 'Historial de Estado' : 'Status History'}</h4>
                             {statusLogs && statusLogs.length > 0 ? (
                               <div className="space-y-2">
                                 {statusLogs.map((log: any) => (
@@ -356,7 +353,7 @@ const ShipmentsManager = () => {
                                   </div>
                                 ))}
                               </div>
-                            ) : <p className="text-muted-foreground text-sm">No history yet</p>}
+                            ) : <p className="text-muted-foreground text-sm">{es ? 'Sin historial aún' : 'No history yet'}</p>}
                           </div>
                         )}
                       </div>
