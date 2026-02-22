@@ -13,12 +13,15 @@ import TrucksManager from '@/pages/admin/TrucksManager';
 import ShipmentsManager from '@/pages/admin/ShipmentsManager';
 import InvoicesManager from '@/pages/admin/InvoicesManager';
 import Reports from '@/pages/admin/Reports';
+import ContactMessages from '@/pages/admin/ContactMessages';
+import { Inbox } from 'lucide-react';
 
 const tabs = [
   { key: 'pages', label: 'Pages', icon: FileText },
   { key: 'blog', label: 'Blog/News', icon: Newspaper },
   { key: 'services', label: 'Services', icon: Wrench },
   { key: 'quotes', label: 'Quote Requests', icon: MessageSquare },
+  { key: 'contacts', label: 'Contact Messages', icon: Inbox },
   { key: 'shipments', label: 'Shipments', icon: Package },
   { key: 'drivers', label: 'Drivers', icon: UserCheck },
   { key: 'trucks', label: 'Trucks', icon: Truck },
@@ -59,6 +62,7 @@ const Admin = () => {
         {activeTab === 'blog' && <BlogEditor />}
         {activeTab === 'services' && <ServicesManager />}
         {activeTab === 'quotes' && <QuoteRequests />}
+        {activeTab === 'contacts' && <ContactMessages />}
         {activeTab === 'shipments' && <ShipmentsManager />}
         {activeTab === 'drivers' && <DriversManager />}
         {activeTab === 'trucks' && <TrucksManager />}
