@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,114 +24,61 @@ const SHIPMENT_STATUSES = [
 ];
 
 const statusColors: Record<string, string> = {
-  created: 'bg-muted text-muted-foreground',
-  assigned: 'bg-purple-500/20 text-purple-400',
-  picked_up: 'bg-indigo-500/20 text-indigo-400',
-  in_transit: 'bg-blue-500/20 text-blue-400',
-  passed_city: 'bg-cyan-500/20 text-cyan-400',
-  out_for_delivery: 'bg-teal-500/20 text-teal-400',
-  delivered: 'bg-green-500/20 text-green-400',
-  delayed_mechanical: 'bg-orange-500/20 text-orange-400',
-  delayed_weather: 'bg-amber-500/20 text-amber-400',
-  delayed_custom: 'bg-yellow-500/20 text-yellow-400',
-  on_time: 'bg-emerald-500/20 text-emerald-400',
-  cancelled: 'bg-red-500/20 text-red-400',
+  created: 'bg-muted text-muted-foreground', assigned: 'bg-purple-500/20 text-purple-400',
+  picked_up: 'bg-indigo-500/20 text-indigo-400', in_transit: 'bg-blue-500/20 text-blue-400',
+  passed_city: 'bg-cyan-500/20 text-cyan-400', out_for_delivery: 'bg-teal-500/20 text-teal-400',
+  delivered: 'bg-green-500/20 text-green-400', delayed_mechanical: 'bg-orange-500/20 text-orange-400',
+  delayed_weather: 'bg-amber-500/20 text-amber-400', delayed_custom: 'bg-yellow-500/20 text-yellow-400',
+  on_time: 'bg-emerald-500/20 text-emerald-400', cancelled: 'bg-red-500/20 text-red-400',
   pending: 'bg-yellow-500/20 text-yellow-400',
 };
 
 const availabilityColors: Record<string, string> = {
-  available: 'bg-green-500/20 text-green-400',
-  unavailable: 'bg-muted text-muted-foreground',
-  on_route: 'bg-blue-500/20 text-blue-400',
+  available: 'bg-green-500/20 text-green-400', unavailable: 'bg-muted text-muted-foreground', on_route: 'bg-blue-500/20 text-blue-400',
 };
 
 const truckStatusColors: Record<string, string> = {
-  available: 'bg-green-500/20 text-green-400',
-  in_use: 'bg-blue-500/20 text-blue-400',
-  maintenance: 'bg-orange-500/20 text-orange-400',
+  available: 'bg-green-500/20 text-green-400', in_use: 'bg-blue-500/20 text-blue-400', maintenance: 'bg-orange-500/20 text-orange-400',
 };
 
 const LogisticsPortal = () => {
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const es = language === 'es';
   const queryClient = useQueryClient();
   const [expandedShipment, setExpandedShipment] = useState<string | null>(null);
 
-  // Shipments
   const { data: shipments = [] } = useQuery({
     queryKey: ["logistics-shipments"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("shipments")
-        .select("*, drivers(full_name), trucks(plate_number)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("shipments").select("*, drivers(full_name), trucks(plate_number)").order("created_at", { ascending: false }); if (error) throw error; return data || []; },
   });
 
-  // Trucks
   const { data: trucks = [] } = useQuery({
     queryKey: ["logistics-trucks"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("trucks")
-        .select("*, drivers:assigned_driver_id(full_name)")
-        .order("plate_number");
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("trucks").select("*, drivers:assigned_driver_id(full_name)").order("plate_number"); if (error) throw error; return data || []; },
   });
 
-  // Drivers
   const { data: drivers = [] } = useQuery({
     queryKey: ["logistics-drivers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("drivers")
-        .select("*")
-        .order("full_name");
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("drivers").select("*").order("full_name"); if (error) throw error; return data || []; },
   });
 
-  // Status log for expanded shipment
   const { data: statusLog = [] } = useQuery({
     queryKey: ["logistics-status-log", expandedShipment],
-    queryFn: async () => {
-      if (!expandedShipment) return [];
-      const { data, error } = await supabase
-        .from("shipment_status_log")
-        .select("*")
-        .eq("shipment_id", expandedShipment)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: async () => { if (!expandedShipment) return []; const { data, error } = await supabase.from("shipment_status_log").select("*").eq("shipment_id", expandedShipment).order("created_at", { ascending: false }); if (error) throw error; return data || []; },
     enabled: !!expandedShipment,
   });
 
-  // Update shipment status + log
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status, location, notes }: { id: string; status: string; location?: string; notes?: string }) => {
       const updates: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
       if (location !== undefined) updates.current_location = location;
       const { error } = await supabase.from("shipments").update(updates).eq("id", id);
       if (error) throw error;
-      await supabase.from("shipment_status_log").insert({
-        shipment_id: id,
-        status,
-        changed_by: user!.id,
-        location: location || null,
-        notes: notes || null,
-      });
+      await supabase.from("shipment_status_log").insert({ shipment_id: id, status, changed_by: user!.id, location: location || null, notes: notes || null });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["logistics-shipments"] });
-      queryClient.invalidateQueries({ queryKey: ["logistics-status-log"] });
-      toast.success("Status updated");
-    },
-    onError: () => toast.error("Failed to update status"),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["logistics-shipments"] }); queryClient.invalidateQueries({ queryKey: ["logistics-status-log"] }); toast.success(es ? "Estado actualizado" : "Status updated"); },
+    onError: () => toast.error(es ? "Error al actualizar estado" : "Failed to update status"),
   });
 
   const activeShipments = shipments.filter((s: any) => !["delivered", "cancelled"].includes(s.status));
@@ -140,58 +88,41 @@ const LogisticsPortal = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container mx-auto px-4 pt-28 pb-20">
-        <h1 className="text-3xl font-bold text-foreground mb-6">Operations Portal</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-6">{es ? "Portal de Operaciones" : "Operations Portal"}</h1>
 
         <Tabs defaultValue="shipments">
           <TabsList className="mb-6">
-            <TabsTrigger value="shipments"><Package className="h-4 w-4 mr-2" />Shipments ({shipments.length})</TabsTrigger>
-            <TabsTrigger value="trucks"><Truck className="h-4 w-4 mr-2" />Trucks ({trucks.length})</TabsTrigger>
-            <TabsTrigger value="drivers"><Users className="h-4 w-4 mr-2" />Drivers ({drivers.length})</TabsTrigger>
+            <TabsTrigger value="shipments"><Package className="h-4 w-4 mr-2" />{es ? "Envíos" : "Shipments"} ({shipments.length})</TabsTrigger>
+            <TabsTrigger value="trucks"><Truck className="h-4 w-4 mr-2" />{es ? "Camiones" : "Trucks"} ({trucks.length})</TabsTrigger>
+            <TabsTrigger value="drivers"><Users className="h-4 w-4 mr-2" />{es ? "Choferes" : "Drivers"} ({drivers.length})</TabsTrigger>
           </TabsList>
 
-          {/* Shipments Tab */}
           <TabsContent value="shipments">
             <Tabs defaultValue="active">
               <TabsList className="mb-4">
-                <TabsTrigger value="active">Active ({activeShipments.length})</TabsTrigger>
-                <TabsTrigger value="completed">Completed ({completedShipments.length})</TabsTrigger>
+                <TabsTrigger value="active">{es ? "Activos" : "Active"} ({activeShipments.length})</TabsTrigger>
+                <TabsTrigger value="completed">{es ? "Completados" : "Completed"} ({completedShipments.length})</TabsTrigger>
               </TabsList>
               <TabsContent value="active">
-                <ShipmentsList
-                  shipments={activeShipments}
-                  expandedId={expandedShipment}
-                  onToggle={(id) => setExpandedShipment(expandedShipment === id ? null : id)}
-                  statusLog={statusLog}
-                  onUpdateStatus={(data) => updateStatusMutation.mutate(data)}
-                  isPending={updateStatusMutation.isPending}
-                />
+                <ShipmentsList shipments={activeShipments} expandedId={expandedShipment} onToggle={(id) => setExpandedShipment(expandedShipment === id ? null : id)} statusLog={statusLog} onUpdateStatus={(data) => updateStatusMutation.mutate(data)} isPending={updateStatusMutation.isPending} es={es} />
               </TabsContent>
               <TabsContent value="completed">
-                <ShipmentsList
-                  shipments={completedShipments}
-                  expandedId={expandedShipment}
-                  onToggle={(id) => setExpandedShipment(expandedShipment === id ? null : id)}
-                  statusLog={statusLog}
-                  onUpdateStatus={(data) => updateStatusMutation.mutate(data)}
-                  isPending={updateStatusMutation.isPending}
-                  readOnly
-                />
+                <ShipmentsList shipments={completedShipments} expandedId={expandedShipment} onToggle={(id) => setExpandedShipment(expandedShipment === id ? null : id)} statusLog={statusLog} onUpdateStatus={(data) => updateStatusMutation.mutate(data)} isPending={updateStatusMutation.isPending} readOnly es={es} />
               </TabsContent>
             </Tabs>
           </TabsContent>
 
-          {/* Trucks Tab */}
           <TabsContent value="trucks">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Plate</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Model</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead>Assigned Driver</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{es ? "Placa" : "Plate"}</TableHead>
+                    <TableHead>{es ? "Tipo" : "Type"}</TableHead>
+                    <TableHead>{es ? "Modelo" : "Model"}</TableHead>
+                    <TableHead>{es ? "Capacidad" : "Capacity"}</TableHead>
+                    <TableHead>{es ? "Chofer Asignado" : "Assigned Driver"}</TableHead>
+                    <TableHead>{es ? "Estado" : "Status"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -200,37 +131,29 @@ const LogisticsPortal = () => {
                       <TableCell className="font-mono text-foreground">{t.plate_number}</TableCell>
                       <TableCell className="text-muted-foreground">{t.vehicle_type}</TableCell>
                       <TableCell className="text-muted-foreground">{t.model || "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {t.capacity_pallets ? `${t.capacity_pallets} pallets` : "—"}
-                        {t.capacity_kg ? ` / ${t.capacity_kg}kg` : ""}
-                      </TableCell>
+                      <TableCell className="text-muted-foreground">{t.capacity_pallets ? `${t.capacity_pallets} ${es ? "tarimas" : "pallets"}` : "—"}{t.capacity_kg ? ` / ${t.capacity_kg}kg` : ""}</TableCell>
                       <TableCell className="text-muted-foreground">{t.drivers?.full_name || "—"}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs ${truckStatusColors[t.current_status] || 'bg-muted text-muted-foreground'}`}>
-                          {t.current_status}
-                        </span>
-                      </TableCell>
+                      <TableCell><span className={`px-2 py-1 rounded text-xs ${truckStatusColors[t.current_status] || 'bg-muted text-muted-foreground'}`}>{t.current_status}</span></TableCell>
                     </TableRow>
                   ))}
                   {trucks.length === 0 && (
-                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No trucks found.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{es ? "No se encontraron camiones." : "No trucks found."}</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
             </div>
           </TabsContent>
 
-          {/* Drivers Tab */}
           <TabsContent value="drivers">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>License</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Active</TableHead>
+                    <TableHead>{es ? "Nombre" : "Name"}</TableHead>
+                    <TableHead>{es ? "Teléfono" : "Phone"}</TableHead>
+                    <TableHead>{es ? "Licencia" : "License"}</TableHead>
+                    <TableHead>{es ? "Estado" : "Status"}</TableHead>
+                    <TableHead>{es ? "Activo" : "Active"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -239,18 +162,12 @@ const LogisticsPortal = () => {
                       <TableCell className="font-medium text-foreground">{d.full_name}</TableCell>
                       <TableCell className="text-muted-foreground">{d.phone || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{d.license_number || "—"}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs ${availabilityColors[d.availability_status] || 'bg-muted text-muted-foreground'}`}>
-                          {d.availability_status}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={d.active ? "default" : "secondary"}>{d.active ? "Yes" : "No"}</Badge>
-                      </TableCell>
+                      <TableCell><span className={`px-2 py-1 rounded text-xs ${availabilityColors[d.availability_status] || 'bg-muted text-muted-foreground'}`}>{d.availability_status}</span></TableCell>
+                      <TableCell><Badge variant={d.active ? "default" : "secondary"}>{d.active ? (es ? "Sí" : "Yes") : "No"}</Badge></TableCell>
                     </TableRow>
                   ))}
                   {drivers.length === 0 && (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No drivers found.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{es ? "No se encontraron choferes." : "No drivers found."}</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -263,60 +180,35 @@ const LogisticsPortal = () => {
   );
 };
 
-// --- Shipments List sub-component ---
-
 interface ShipmentsListProps {
-  shipments: any[];
-  expandedId: string | null;
-  onToggle: (id: string) => void;
-  statusLog: any[];
+  shipments: any[]; expandedId: string | null; onToggle: (id: string) => void; statusLog: any[];
   onUpdateStatus: (data: { id: string; status: string; location?: string; notes?: string }) => void;
-  isPending: boolean;
-  readOnly?: boolean;
+  isPending: boolean; readOnly?: boolean; es: boolean;
 }
 
-const ShipmentsList = ({ shipments, expandedId, onToggle, statusLog, onUpdateStatus, isPending, readOnly }: ShipmentsListProps) => {
-  if (!shipments.length) {
-    return <p className="text-muted-foreground text-center py-8">No shipments found.</p>;
-  }
-
+const ShipmentsList = ({ shipments, expandedId, onToggle, statusLog, onUpdateStatus, isPending, readOnly, es }: ShipmentsListProps) => {
+  if (!shipments.length) return <p className="text-muted-foreground text-center py-8">{es ? "No se encontraron envíos." : "No shipments found."}</p>;
   return (
     <div className="space-y-3">
       {shipments.map((s: any) => (
-        <ShipmentCard
-          key={s.id}
-          shipment={s}
-          expanded={expandedId === s.id}
-          onToggle={() => onToggle(s.id)}
-          statusLog={expandedId === s.id ? statusLog : []}
-          onUpdateStatus={onUpdateStatus}
-          isPending={isPending}
-          readOnly={readOnly}
-        />
+        <ShipmentCard key={s.id} shipment={s} expanded={expandedId === s.id} onToggle={() => onToggle(s.id)} statusLog={expandedId === s.id ? statusLog : []} onUpdateStatus={onUpdateStatus} isPending={isPending} readOnly={readOnly} es={es} />
       ))}
     </div>
   );
 };
 
 interface ShipmentCardProps {
-  shipment: any;
-  expanded: boolean;
-  onToggle: () => void;
-  statusLog: any[];
+  shipment: any; expanded: boolean; onToggle: () => void; statusLog: any[];
   onUpdateStatus: (data: { id: string; status: string; location?: string; notes?: string }) => void;
-  isPending: boolean;
-  readOnly?: boolean;
+  isPending: boolean; readOnly?: boolean; es: boolean;
 }
 
-const ShipmentCard = ({ shipment, expanded, onToggle, statusLog, onUpdateStatus, isPending, readOnly }: ShipmentCardProps) => {
+const ShipmentCard = ({ shipment, expanded, onToggle, statusLog, onUpdateStatus, isPending, readOnly, es }: ShipmentCardProps) => {
   const [newStatus, setNewStatus] = useState(shipment.status);
   const [location, setLocation] = useState(shipment.current_location || "");
   const [notes, setNotes] = useState("");
 
-  const handleSave = () => {
-    onUpdateStatus({ id: shipment.id, status: newStatus, location, notes: notes || undefined });
-    setNotes("");
-  };
+  const handleSave = () => { onUpdateStatus({ id: shipment.id, status: newStatus, location, notes: notes || undefined }); setNotes(""); };
 
   return (
     <Card>
@@ -336,7 +228,7 @@ const ShipmentCard = ({ shipment, expanded, onToggle, statusLog, onUpdateStatus,
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Location:</span>
+              <span className="text-muted-foreground">{es ? "Ubicación:" : "Location:"}</span>
               <span className="text-foreground">{shipment.current_location || "—"}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -346,42 +238,38 @@ const ShipmentCard = ({ shipment, expanded, onToggle, statusLog, onUpdateStatus,
             </div>
             <div className="flex items-center gap-2">
               <Truck className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Truck:</span>
+              <span className="text-muted-foreground">{es ? "Camión:" : "Truck:"}</span>
               <span className="text-foreground">{shipment.trucks?.plate_number || "—"}</span>
             </div>
           </div>
 
           {!readOnly && (
             <div className="space-y-4 bg-muted/30 rounded-lg p-4">
-              <h4 className="font-semibold text-foreground">Update Status</h4>
+              <h4 className="font-semibold text-foreground">{es ? "Actualizar Estado" : "Update Status"}</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">Status</label>
+                  <label className="text-sm text-muted-foreground mb-1 block">{es ? "Estado" : "Status"}</label>
                   <Select value={newStatus} onValueChange={setNewStatus}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {SHIPMENT_STATUSES.map(s => (
-                        <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>
-                      ))}
-                    </SelectContent>
+                    <SelectContent>{SHIPMENT_STATUSES.map(s => (<SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>))}</SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">Location</label>
-                  <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Ensenada checkpoint" />
+                  <label className="text-sm text-muted-foreground mb-1 block">{es ? "Ubicación" : "Location"}</label>
+                  <Input value={location} onChange={e => setLocation(e.target.value)} placeholder={es ? "Ej. Punto de control Ensenada" : "e.g. Ensenada checkpoint"} />
                 </div>
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Notes</label>
-                <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Status update notes..." rows={2} />
+                <label className="text-sm text-muted-foreground mb-1 block">{es ? "Notas" : "Notes"}</label>
+                <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={es ? "Notas de actualización..." : "Status update notes..."} rows={2} />
               </div>
-              <Button onClick={handleSave} disabled={isPending} variant="hero" size="sm">Save Changes</Button>
+              <Button onClick={handleSave} disabled={isPending} variant="hero" size="sm">{es ? "Guardar Cambios" : "Save Changes"}</Button>
             </div>
           )}
 
           {statusLog.length > 0 && (
             <div>
-              <h4 className="font-semibold text-foreground mb-2">Status History</h4>
+              <h4 className="font-semibold text-foreground mb-2">{es ? "Historial de Estado" : "Status History"}</h4>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {statusLog.map((log: any) => (
                   <div key={log.id} className="flex items-start gap-3 text-sm">

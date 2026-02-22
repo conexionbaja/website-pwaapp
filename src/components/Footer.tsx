@@ -25,7 +25,7 @@ const Footer = () => {
       }
       return;
     }
-    toast.success("¡Gracias por suscribirte!");
+    toast.success(t.footer.newsletter.title === 'Newsletter' ? 'Thanks for subscribing!' : '¡Gracias por suscribirte!');
     setEmail("");
   };
 
