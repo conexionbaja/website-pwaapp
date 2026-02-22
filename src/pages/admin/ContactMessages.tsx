@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { format } from 'date-fns';
 import { Mail, Eye, CheckCheck } from 'lucide-react';
 
@@ -19,6 +20,8 @@ interface ContactMessage {
 }
 
 const ContactMessages = () => {
+  const { language } = useLanguage();
+  const es = language === 'es';
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ContactMessage | null>(null);
@@ -39,7 +42,7 @@ const ContactMessages = () => {
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from('contact_messages').update({ status }).eq('id', id);
     if (error) { toast.error(error.message); return; }
-    toast.success(`Marked as ${status}`);
+    toast.success(es ? `Marcado como ${status === 'read' ? 'leído' : status === 'replied' ? 'respondido' : status}` : `Marked as ${status}`);
     setMessages(prev => prev.map(m => m.id === id ? { ...m, status } : m));
     if (selected?.id === id) setSelected(prev => prev ? { ...prev, status } : null);
   };
@@ -50,23 +53,32 @@ const ContactMessages = () => {
     return 'default';
   };
 
+  const statusLabel = (s: string) => {
+    if (es) {
+      if (s === 'unread') return 'No leído';
+      if (s === 'read') return 'Leído';
+      if (s === 'replied') return 'Respondido';
+    }
+    return s;
+  };
+
   return (
     <div className="space-y-6">
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-foreground flex items-center gap-2"><Mail className="h-5 w-5" />Contact Messages</CardTitle>
+          <CardTitle className="text-foreground flex items-center gap-2"><Mail className="h-5 w-5" />{es ? 'Mensajes de Contacto' : 'Contact Messages'}</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? <p className="text-muted-foreground">Loading...</p> : messages.length === 0 ? <p className="text-muted-foreground">No messages yet.</p> : (
+          {loading ? <p className="text-muted-foreground">{es ? 'Cargando...' : 'Loading...'}</p> : messages.length === 0 ? <p className="text-muted-foreground">{es ? 'No hay mensajes aún.' : 'No messages yet.'}</p> : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Name</TableHead>
+                  <TableHead>{es ? 'Fecha' : 'Date'}</TableHead>
+                  <TableHead>{es ? 'Nombre' : 'Name'}</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{es ? 'Mensaje' : 'Message'}</TableHead>
+                  <TableHead>{es ? 'Estado' : 'Status'}</TableHead>
+                  <TableHead>{es ? 'Acciones' : 'Actions'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -76,7 +88,7 @@ const ContactMessages = () => {
                     <TableCell className="text-foreground font-medium">{m.name}</TableCell>
                     <TableCell className="text-muted-foreground">{m.email}</TableCell>
                     <TableCell className="text-muted-foreground max-w-[200px] truncate">{m.message}</TableCell>
-                    <TableCell><Badge variant={statusColor(m.status)}>{m.status}</Badge></TableCell>
+                    <TableCell><Badge variant={statusColor(m.status)}>{statusLabel(m.status)}</Badge></TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button size="sm" variant="ghost" onClick={() => { setSelected(m); if (m.status === 'unread') updateStatus(m.id, 'read'); }}>
@@ -99,15 +111,15 @@ const ContactMessages = () => {
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <DialogContent className="bg-card border-border">
-          <DialogHeader><DialogTitle className="text-foreground">Message from {selected?.name}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-foreground">{es ? 'Mensaje de' : 'Message from'} {selected?.name}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">{selected.email} · {format(new Date(selected.created_at), 'PPpp')}</p>
               <p className="text-foreground whitespace-pre-wrap">{selected.message}</p>
               <div className="flex gap-2">
-                <Badge variant={statusColor(selected.status)}>{selected.status}</Badge>
+                <Badge variant={statusColor(selected.status)}>{statusLabel(selected.status)}</Badge>
                 {selected.status !== 'replied' && (
-                  <Button size="sm" onClick={() => updateStatus(selected.id, 'replied')}>Mark Replied</Button>
+                  <Button size="sm" onClick={() => updateStatus(selected.id, 'replied')}>{es ? 'Marcar Respondido' : 'Mark Replied'}</Button>
                 )}
               </div>
             </div>

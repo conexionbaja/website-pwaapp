@@ -7,10 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 import ImageUpload from '@/components/admin/ImageUpload';
 
 const PagesEditor = () => {
   const queryClient = useQueryClient();
+  const { language } = useLanguage();
+  const es = language === 'es';
   const [editing, setEditing] = useState<any>(null);
 
   const { data: pages } = useQuery({
@@ -33,7 +36,7 @@ const PagesEditor = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms_pages_admin'] });
-      toast.success('Page updated!');
+      toast.success(es ? '¡Página actualizada!' : 'Page updated!');
       setEditing(null);
     },
     onError: (e: any) => toast.error(e.message),
@@ -42,25 +45,25 @@ const PagesEditor = () => {
   if (editing) {
     return (
       <div className="max-w-2xl">
-        <Button variant="ghost" onClick={() => setEditing(null)} className="mb-4">← Back</Button>
+        <Button variant="ghost" onClick={() => setEditing(null)} className="mb-4">← {es ? 'Volver' : 'Back'}</Button>
         <Card className="bg-card border-border">
           <CardHeader><CardTitle className="text-foreground">{editing.slug} / {editing.section_key} ({editing.language})</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-foreground">Title</Label>
+              <Label className="text-foreground">{es ? 'Título' : 'Title'}</Label>
               <Input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} className="bg-background" />
             </div>
             <div className="space-y-2">
-              <Label className="text-foreground">Short Description</Label>
+              <Label className="text-foreground">{es ? 'Descripción Corta' : 'Short Description'}</Label>
               <Input value={editing.short_desc} onChange={(e) => setEditing({ ...editing, short_desc: e.target.value })} className="bg-background" />
             </div>
             <div className="space-y-2">
-              <Label className="text-foreground">Content (HTML)</Label>
+              <Label className="text-foreground">{es ? 'Contenido (HTML)' : 'Content (HTML)'}</Label>
               <Textarea value={editing.content} onChange={(e) => setEditing({ ...editing, content: e.target.value })} rows={10} className="bg-background font-mono text-sm" />
             </div>
-            <ImageUpload value={editing.image_url || ''} onChange={(url) => setEditing({ ...editing, image_url: url })} label="Image" />
+            <ImageUpload value={editing.image_url || ''} onChange={(url) => setEditing({ ...editing, image_url: url })} label={es ? 'Imagen' : 'Image'} />
             <Button variant="hero" onClick={() => updateMutation.mutate(editing)} disabled={updateMutation.isPending}>
-              Save Changes
+              {es ? 'Guardar Cambios' : 'Save Changes'}
             </Button>
           </CardContent>
         </Card>
@@ -70,7 +73,7 @@ const PagesEditor = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-6">CMS Pages</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">{es ? 'Páginas CMS' : 'CMS Pages'}</h1>
       <div className="space-y-2">
         {pages?.map((page) => (
           <div key={page.id} className="flex items-center justify-between p-3 bg-card border border-border rounded-lg">
@@ -79,7 +82,7 @@ const PagesEditor = () => {
               <span className="text-muted-foreground text-sm ml-2">({page.language})</span>
               <span className="text-muted-foreground text-sm ml-2">— {page.title}</span>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setEditing({ ...page })}>Edit</Button>
+            <Button variant="outline" size="sm" onClick={() => setEditing({ ...page })}>{es ? 'Editar' : 'Edit'}</Button>
           </div>
         ))}
       </div>

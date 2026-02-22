@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 
 const availabilityStatuses = ['available', 'unavailable', 'on_route'];
@@ -23,9 +24,17 @@ const empty: DriverForm = { full_name: '', phone: '', license_number: '', active
 
 const DriversManager = () => {
   const qc = useQueryClient();
+  const { language } = useLanguage();
+  const es = language === 'es';
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<DriverForm>(empty);
+
+  const availabilityLabels: Record<string, string> = {
+    available: es ? 'Disponible' : 'Available',
+    unavailable: es ? 'No Disponible' : 'Unavailable',
+    on_route: es ? 'En Ruta' : 'On Route',
+  };
 
   const { data: drivers } = useQuery({
     queryKey: ['admin_drivers'],
@@ -41,13 +50,13 @@ const DriversManager = () => {
       if (editing) { const { error } = await supabase.from('drivers').update(payload).eq('id', editing); if (error) throw error; }
       else { const { error } = await supabase.from('drivers').insert(payload); if (error) throw error; }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_drivers'] }); toast.success('Saved'); setOpen(false); setEditing(null); setForm(empty); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_drivers'] }); toast.success(es ? 'Guardado' : 'Saved'); setOpen(false); setEditing(null); setForm(empty); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const del = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('drivers').delete().eq('id', id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_drivers'] }); toast.success('Deleted'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin_drivers'] }); toast.success(es ? 'Eliminado' : 'Deleted'); },
   });
 
   const toggleActive = useMutation({
@@ -64,36 +73,43 @@ const DriversManager = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Drivers</h1>
+        <h1 className="text-2xl font-bold text-foreground">{es ? 'Conductores' : 'Drivers'}</h1>
         <Dialog open={open} onOpenChange={o => { setOpen(o); if (!o) { setEditing(null); setForm(empty); } }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Add Driver</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />{es ? 'Agregar Conductor' : 'Add Driver'}</Button></DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>{editing ? 'Edit Driver' : 'New Driver'}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editing ? (es ? 'Editar Conductor' : 'Edit Driver') : (es ? 'Nuevo Conductor' : 'New Driver')}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div><Label>Full Name</Label><Input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} /></div>
-              <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-              <div><Label>License Number</Label><Input value={form.license_number} onChange={e => setForm({ ...form, license_number: e.target.value })} /></div>
-              <div><Label>Availability Status</Label>
+              <div><Label>{es ? 'Nombre Completo' : 'Full Name'}</Label><Input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} /></div>
+              <div><Label>{es ? 'Teléfono' : 'Phone'}</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+              <div><Label>{es ? 'Número de Licencia' : 'License Number'}</Label><Input value={form.license_number} onChange={e => setForm({ ...form, license_number: e.target.value })} /></div>
+              <div><Label>{es ? 'Estado de Disponibilidad' : 'Availability Status'}</Label>
                 <Select value={form.availability_status} onValueChange={v => setForm({ ...form, availability_status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{availabilityStatuses.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+                  <SelectContent>{availabilityStatuses.map(s => <SelectItem key={s} value={s}>{availabilityLabels[s]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>User ID (optional)</Label><Input value={form.user_id} onChange={e => setForm({ ...form, user_id: e.target.value })} placeholder="Link to auth user UUID" /></div>
-              <Button className="w-full" onClick={() => upsert.mutate()}>{editing ? 'Update' : 'Create'}</Button>
+              <div><Label>{es ? 'ID de Usuario (opcional)' : 'User ID (optional)'}</Label><Input value={form.user_id} onChange={e => setForm({ ...form, user_id: e.target.value })} placeholder={es ? 'Vincular a UUID de usuario' : 'Link to auth user UUID'} /></div>
+              <Button className="w-full" onClick={() => upsert.mutate()}>{editing ? (es ? 'Actualizar' : 'Update') : (es ? 'Crear' : 'Create')}</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
       <Table>
-        <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Phone</TableHead><TableHead>License</TableHead><TableHead>Availability</TableHead><TableHead>Active</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow>
+          <TableHead>{es ? 'Nombre' : 'Name'}</TableHead>
+          <TableHead>{es ? 'Teléfono' : 'Phone'}</TableHead>
+          <TableHead>{es ? 'Licencia' : 'License'}</TableHead>
+          <TableHead>{es ? 'Disponibilidad' : 'Availability'}</TableHead>
+          <TableHead>{es ? 'Activo' : 'Active'}</TableHead>
+          <TableHead>{es ? 'Acciones' : 'Actions'}</TableHead>
+        </TableRow></TableHeader>
         <TableBody>
           {drivers?.map((d: any) => (
             <TableRow key={d.id}>
               <TableCell className="text-foreground font-medium">{d.full_name}</TableCell>
               <TableCell className="text-muted-foreground">{d.phone}</TableCell>
               <TableCell className="text-muted-foreground">{d.license_number}</TableCell>
-              <TableCell><span className={`px-2 py-1 rounded text-xs ${availabilityColors[d.availability_status] || ''}`}>{d.availability_status?.replace(/_/g, ' ')}</span></TableCell>
+              <TableCell><span className={`px-2 py-1 rounded text-xs ${availabilityColors[d.availability_status] || ''}`}>{availabilityLabels[d.availability_status] || d.availability_status?.replace(/_/g, ' ')}</span></TableCell>
               <TableCell><Switch checked={d.active} onCheckedChange={v => toggleActive.mutate({ id: d.id, active: v })} /></TableCell>
               <TableCell className="flex gap-1">
                 <Button size="sm" variant="outline" onClick={() => openEdit(d)}><Pencil className="h-3 w-3" /></Button>
